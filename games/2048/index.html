@@ -237,7 +237,57 @@
     color: #fff;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    transition: transform 200ms ease;
+  }
+
+  /* ---------- Fullscreen button ---------- */
+  .fullscreen-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 5;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: rgba(9, 13, 38, 0.72);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-inset);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: var(--ink-dim);
+    transition:
+      border-color 200ms ease,
+      background 200ms ease,
+      color 200ms ease,
+      transform 200ms ease;
+    padding: 0;
+    font: inherit;
+  }
+
+  .fullscreen-btn:hover,
+  .fullscreen-btn:focus-visible {
+    border-color: var(--line-strong);
+    background: var(--glass-hover);
+    color: #fff;
+    outline: none;
+  }
+
+  .fullscreen-btn:active { transform: scale(0.9); }
+
+  .fullscreen-btn svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+  }
+
+  /* ---------- Board wrap responsive ---------- */
+  .board-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
   }
 
   .score-value.pop {
@@ -834,19 +884,6 @@
     padding-bottom: 0.55rem;
   }
 
-  .topbar-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: #fff;
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.05rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
   .brand-mark {
     width: 18px;
     height: 18px;
@@ -954,12 +991,6 @@
     <!-- ============ TOPBAR ============ -->
   <nav class="topbar" id="topbar">
     <div class="topbar-inner">
-      <a class="topbar-brand" href="/">
-        <span class="brand-mark" aria-hidden="true">
-          <div class="brand-star"></div>
-        </span>
-        <span>DUB5</span>
-      </a>
       <div class="topbar-links">
         <a class="topbar-link" href="/#games" data-nav="games">Games</a>
         <a class="topbar-link" href="/#tools" data-nav="tools">Tools</a>
@@ -1020,6 +1051,11 @@
       </div>
 
       <div class="board-wrap">
+        <button class="fullscreen-btn" id="fullscreenBtn" type="button" aria-label="Volledig scherm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
         <div class="board" id="board" aria-label="2048 bord" role="grid">
           <div class="cells">
             <div></div><div></div><div></div><div></div>
@@ -1811,6 +1847,49 @@ document.getElementById('winNew').addEventListener('click', function () {
    13. INIT
    ========================================================= */
 newGame();
+
+/* =========================================================
+   14. FULLSCREEN
+   ========================================================= */
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const topbar = document.getElementById('topbar');
+const backLink = document.querySelector('.back-link-fixed');
+const gameHeader = document.querySelector('.game-header');
+const headerRule = document.querySelector('.header-rule');
+const gameFooter = document.querySelector('.game-footer');
+
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener('click', function () {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(function (err) {
+        console.log('Fullscreen error:', err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+
+  document.addEventListener('fullscreenchange', function () {
+    if (document.fullscreenElement) {
+      // Hide all UI elements in fullscreen
+      if (topbar) topbar.style.display = 'none';
+      if (backLink) backLink.style.display = 'none';
+      if (gameHeader) gameHeader.style.display = 'none';
+      if (headerRule) headerRule.style.display = 'none';
+      if (gameFooter) gameFooter.style.display = 'none';
+      fullscreenBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>';
+    } else {
+      // Restore UI elements when exiting fullscreen
+      if (topbar) topbar.style.display = '';
+      if (backLink) backLink.style.display = '';
+      if (gameHeader) gameHeader.style.display = '';
+      if (headerRule) headerRule.style.display = '';
+      if (gameFooter) gameFooter.style.display = '';
+      fullscreenBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
+    }
+  });
+}
+
 // Topbar scroll effect
 const topbar = document.getElementById('topbar');
 if (topbar) {

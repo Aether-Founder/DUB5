@@ -501,6 +501,7 @@
         width: 1rem;
         height: 1rem;
         flex: 0 0 auto;
+        margin-left: auto;
         color: var(--ink-dim);
         transition: transform 0.3s ease, color 0.3s ease;
       }
@@ -579,6 +580,24 @@
       }
       body[data-layout="list"] .nav-button { width: 100%; }
       body[data-layout="list"] .nav-button-desc { flex: 1 1 auto; }
+
+      /* three-columns — 3 columns without descriptions (default) */
+      body[data-layout="three-columns"] .nav-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      body[data-layout="three-columns"] .nav-button-desc { display: none; }
+
+      @media (max-width: 900px) {
+        body[data-layout="three-columns"] .nav-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        body[data-layout="three-columns"] .nav-grid {
+          grid-template-columns: 1fr;
+        }
+      }
 
       /* =========================================================
          SECTIONS
@@ -680,7 +699,7 @@
       }
     </style>
   </head>
-  <body data-layout="pill">
+  <body data-layout="three-columns">
     <canvas class="stars" id="stars" aria-hidden="true"></canvas>
 
     <!-- ============ TOPBAR ============ -->
@@ -1128,20 +1147,23 @@
          LAYOUT TOGGLE
          ========================================================= */
       const LAYOUTS = [
-        { id: 'compact', label: 'Compact' },
-        { id: 'pill',    label: 'Standaard' }
+        { id: 'four-columns', label: '4 kolommen', desc: false },
+        { id: 'three-columns-with-desc', label: '3 kolommen met beschrijving', desc: true }
       ];
       let layoutIndex = 0;
       const layoutBtn = document.getElementById('layoutBtn');
 
-      function applyLayout(id, label) {
-        document.body.dataset.layout = id;
+      function applyLayout(id, label, showDesc) {
         const navGrid = document.querySelector('.nav-grid');
-        if (id === 'compact') {
-          navGrid.classList.add('compact');
-        } else {
-          navGrid.classList.remove('compact');
+        
+        if (id === 'four-columns') {
+          navGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+          document.querySelectorAll('.nav-button-desc').forEach(el => el.style.display = 'none');
+        } else if (id === 'three-columns-with-desc') {
+          navGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          document.querySelectorAll('.nav-button-desc').forEach(el => el.style.display = '');
         }
+        
         layoutBtn.title = 'Layout: ' + label;
         layoutBtn.setAttribute('aria-label', 'Layout: ' + label);
       }
@@ -1149,18 +1171,27 @@
       layoutBtn.addEventListener('click', function () {
         layoutIndex = (layoutIndex + 1) % LAYOUTS.length;
         const L = LAYOUTS[layoutIndex];
-        applyLayout(L.id, L.label);
+        applyLayout(L.id, L.label, L.desc);
       });
       
-      // Apply default layout on load
-      applyLayout(LAYOUTS[0].id, LAYOUTS[0].label);
+      // Apply default layout on load (3 columns without descriptions)
+      const navGrid = document.querySelector('.nav-grid');
+      navGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      document.querySelectorAll('.nav-button-desc').forEach(el => el.style.display = 'none');
 
       /* =========================================================
          TOPBAR
          ========================================================= */
       (function topbar() {
         const bar = document.getElementById('topbar');
+        const brand = document.querySelector('.topbar-brand');
         if (!bar) return;
+        
+        // Hide brand on game pages (not landing page)
+        if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
+          if (brand) brand.style.display = 'none';
+        }
+        
         let ticking = false;
         function update() {
           const y = window.scrollY || window.pageYOffset || 0;

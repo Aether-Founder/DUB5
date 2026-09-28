@@ -80,8 +80,8 @@
     position: fixed;
     top: 1rem;
     left: 1rem;
-    z-index: 50;
-    display: inline-flex;
+    z-index: 99999 !important;
+    display: inline-flex !important;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
@@ -96,6 +96,8 @@
     font-weight: 600;
     text-decoration: none;
     transition: color var(--nav-hover-transition-duration) var(--nav-hover-transition-timing), border-color var(--nav-hover-transition-duration) var(--nav-hover-transition-timing), transform var(--nav-hover-transition-duration) var(--nav-hover-transition-timing), background var(--nav-hover-transition-duration) var(--nav-hover-transition-timing);
+    cursor: pointer;
+    pointer-events: auto !important;
   }
   .back-link-fixed:hover, .back-link-fixed:focus-visible {
     color: #fff;
@@ -218,13 +220,14 @@
   .gallery-grid.grid-2 { grid-template-columns: repeat(2, 1fr); }
   .gallery-grid.grid-3 { grid-template-columns: repeat(3, 1fr); }
   .gallery-grid.grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .gallery-grid.grid-5 { grid-template-columns: repeat(3, 1fr); }
   
   @media (max-width: 900px) {
-    .gallery-grid.grid-3, .gallery-grid.grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .gallery-grid.grid-3, .gallery-grid.grid-4, .gallery-grid.grid-5 { grid-template-columns: repeat(2, 1fr); }
   }
   
   @media (max-width: 600px) {
-    .gallery-grid.grid-2, .gallery-grid.grid-3, .gallery-grid.grid-4 { grid-template-columns: 1fr; }
+    .gallery-grid.grid-2, .gallery-grid.grid-3, .gallery-grid.grid-4, .gallery-grid.grid-5 { grid-template-columns: 1fr; }
   }
   
   .gallery-item {
@@ -275,6 +278,11 @@
     color: var(--ink-dim);
   }
   
+  .gallery-grid.hide-desc .gallery-item .overlay h3,
+  .gallery-grid.hide-desc .gallery-item .overlay p {
+    display: none;
+  }
+  
   .gallery-item .actions {
     position: absolute;
     top: 0.5rem;
@@ -309,7 +317,7 @@
     position: fixed;
     top: 1rem;
     right: 1rem;
-    z-index: 100;
+    z-index: 50;
     flex-shrink: 0;
     appearance: none;
     border: none;
@@ -436,7 +444,7 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 40;
+    z-index: 5;
   }
 
   .topbar::before {
@@ -473,50 +481,6 @@
   .topbar.is-scrolled .topbar-inner {
     padding-top: 0.55rem;
     padding-bottom: 0.55rem;
-  }
-
-  .topbar-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: #fff;
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.05rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
-  .brand-mark {
-    width: 18px;
-    height: 18px;
-    color: #cfe3ff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    position: relative;
-  }
-  
-  .brand-mark .brand-star {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    animation: brand-star-pulse 3s ease-in-out infinite;
-  }
-  
-  .brand-mark .brand-star::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(205,222,255,0.8) 20%, rgba(255,236,214,0.4) 50%, rgba(186,205,255,0.1) 80%, transparent 100%);
-    border-radius: 50%;
-    animation: brand-star-glow 2s ease-in-out infinite alternate;
-  }
-
-  .brand-mark svg {
-    display: none;
   }
 
   .topbar-links {
@@ -634,12 +598,6 @@
   <!-- ============ TOPBAR ============ -->
   <nav class="topbar" id="topbar">
     <div class="topbar-inner">
-      <a class="topbar-brand" href="/">
-        <span class="brand-mark" aria-hidden="true">
-          <div class="brand-star"></div>
-        </span>
-        <span>DUB5</span>
-      </a>
       <div class="topbar-links">
         <a class="topbar-link" href="/#games" data-nav="games">Games</a>
         <a class="topbar-link" href="/#tools" data-nav="tools">Tools</a>
@@ -688,7 +646,7 @@
           <button type="button" data-filter="videos" aria-pressed="false">Video's</button>
         </div>
       </div>
-      <div class="gallery-grid grid-3" id="galleryGrid">
+      <div class="gallery-grid grid-3 hide-desc" id="galleryGrid">
         <div class="empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -726,15 +684,12 @@
     const filterThumb = document.getElementById('filterThumb');
     const layoutToggle = document.getElementById('layoutToggle');
 
-    let currentLayout = 3;
-    const layouts = [1, 2, 3, 4];
+    let toggleState = 0; // 0 = not clicked yet (default: 3 columns without descriptions), 1 = 4 columns without descriptions, 2 = 3 columns with descriptions
 
     // Sample gallery items - replace with actual assets
     const galleryItems = [
-      // Add your actual images/videos here
-      // Example:
-      // { type: 'image', src: './assets/funny-moment-1.jpg', title: 'Funny Moment 1', desc: 'Description' },
-      // { type: 'video', src: './assets/funny-moment-1.mp4', title: 'Funny Video 1', desc: 'Description' },
+      { type: 'image', src: './assets/dolfijn-skelet.jpg', title: 'Dolfijn Skelet', desc: 'Mooi dolfijn skelet' },
+      { type: 'image', src: './assets/mango-island.jpg', title: 'Mango Island', desc: 'Tropisch mango eiland' },
     ];
 
     function renderGallery(filter = 'all') {
@@ -811,11 +766,17 @@
       modalMedia.innerHTML = '';
     }
 
-    function copyItem(index) {
+    async function copyItem(index) {
       const item = galleryItems[index];
-      navigator.clipboard.writeText(window.location.origin + item.src)
-        .then(() => alert('Link gekopieerd naar klembord!'))
-        .catch(() => alert('Kon link niet kopiëren'));
+      try {
+        const response = await fetch(item.src);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ [blob.type]: blob })
+        ]);
+      } catch (err) {
+        console.error('Could not copy image:', err);
+      }
     }
 
     function downloadItem(index) {
@@ -858,10 +819,29 @@
       filterThumb.style.width = `${btnRect.width - 8}px`;
     }
 
-    // Layout toggle
+    // Layout toggle - cycles between 4 columns no desc and 3 columns with desc
     layoutToggle.addEventListener('click', () => {
-      currentLayout = (currentLayout % 4) + 1;
-      galleryGrid.className = `gallery-grid grid-${currentLayout}`;
+      if (toggleState === 0) {
+        // First click: go to 4 columns without descriptions
+        toggleState = 1;
+      } else {
+        // Toggle between the two options
+        toggleState = toggleState === 1 ? 2 : 1;
+      }
+      
+      let gridClass, hideDescClass;
+      
+      if (toggleState === 1) {
+        // 4 columns without descriptions
+        gridClass = 'gallery-grid grid-4';
+        hideDescClass = ' hide-desc';
+      } else {
+        // 3 columns with descriptions
+        gridClass = 'gallery-grid grid-3';
+        hideDescClass = '';
+      }
+      
+      galleryGrid.className = gridClass + hideDescClass;
     });
 
     // Modal close
