@@ -1,11 +1,47 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 5088;
+const PORT = process.env.PORT || 5093;
 
 // Serve static files from root
 app.use(express.static(__dirname));
+
+// Research API routes
+app.get('/api/blogs', (req, res) => {
+  try {
+    const indexPath = path.join(__dirname, 'content', 'research', 'index.json');
+    const indexContent = fs.readFileSync(indexPath, 'utf-8');
+    const indexData = JSON.parse(indexContent);
+    res.json(indexData);
+  } catch (error) {
+    console.error('Error loading blogs index:', error);
+    res.status(500).json({ error: 'Failed to load blog content' });
+  }
+});
+
+app.get('/api/blogs/:slug', (req, res) => {
+  try {
+    const { slug } = req.params;
+    const indexPath = path.join(__dirname, 'content', 'research', 'index.json');
+    const indexContent = fs.readFileSync(indexPath, 'utf-8');
+    const indexData = JSON.parse(indexContent);
+
+    const postMeta = indexData.posts.find((p) => p.slug === slug);
+    if (!postMeta) {
+      return res.status(404).json({ error: 'Blog post not found' });
+    }
+
+    const postPath = path.join(__dirname, 'content', 'research', 'posts', `${postMeta.id}.json`);
+    const postContent = fs.readFileSync(postPath, 'utf-8');
+    const postData = JSON.parse(postContent);
+    res.json(postData);
+  } catch (error) {
+    console.error('Error loading blog post:', error);
+    res.status(500).json({ error: 'Failed to load blog post' });
+  }
+});
 
 // Custom routes for games
 app.get('/snake', (req, res) => {
@@ -141,7 +177,7 @@ app.get('/gimkit-hacks', (req, res) => {
 
 // Guides routes
 app.get('/blog', (req, res) => {
-  res.sendFile(path.join(__dirname, 'blog', 'index.html'));
+  res.sendFile(path.join(__dirname, 'blogs', 'index.html'));
 });
 
 app.get('/handleidingen', (req, res) => {
@@ -173,6 +209,24 @@ app.get('/gallery', (req, res) => {
   res.sendFile(path.join(__dirname, 'gallery', 'index.html'));
 });
 
+// Blogs routes
+app.get('/blogs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'blogs', 'index.html'));
+});
+
+app.get('/blogs/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'blogs', 'index.html'));
+});
+
+app.get('/blogs/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'blogs', 'post.html'));
+});
+
+// Content format documentation
+app.get('/blogs/content-format', (req, res) => {
+  res.download(path.join(__dirname, 'content', 'research', 'CONTENT-FORMAT.md'));
+});
+
 // SPA fallback - serve index.html for any other route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -184,6 +238,7 @@ app.listen(PORT, () => {
   console.log(`Tools: /tools, /kleurenkiezer, /qr-generator, /wachtwoord, /tekst, /eenheden, /numworks`);
   console.log(`Study: /biologie, /study-tools, /leerplatform, /woordenlijst, /flashcards, /oefentoetsen, /samenvattingen`);
   console.log(`Hacks: /blooket-hacks, /alle-hacks, /kahoot-hacks, /quizlet-hacks, /gimkit-hacks`);
-  console.log(`Guides: /blog, /handleidingen, /how-to, /installatie, /tips, /faq, /problemen`);
+  console.log(`Guides: /blogs, /handleidingen, /how-to, /installatie, /tips, /faq, /problemen`);
   console.log(`Gallery: /gallery`);
+  console.log(`Blogs: /blogs, /blogs/content-format`);
 });
