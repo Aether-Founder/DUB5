@@ -714,9 +714,6 @@
         <div class="topbar-links">
           <a class="topbar-link" href="#games"  data-nav="games">Games</a>
           <a class="topbar-link" href="#tools"  data-nav="tools">Tools</a>
-          <a class="topbar-link" href="#study"  data-nav="study">Studie</a>
-          <a class="topbar-link" href="#hacks"  data-nav="hacks">Hacks</a>
-          <a class="topbar-link" href="#guides" data-nav="guides">Uitleg</a>
           <a class="topbar-link" href="#gallery" data-nav="gallery">Galerij</a>
         </div>
         <button class="layout-btn" id="layoutBtn" title="Layout: Pill" aria-label="Layout wisselen">
@@ -966,9 +963,6 @@
       const CATEGORIES = [
         { id: 'games',  label: 'Games' },
         { id: 'tools',  label: 'Tools' },
-        { id: 'study',  label: 'Studie & Leren' },
-        { id: 'hacks',  label: 'Hacks' },
-        { id: 'guides', label: 'Uitleg & Blog' },
         { id: 'gallery', label: 'Galerij & Herinneringen' }
       ];
 
@@ -987,35 +981,7 @@
         { title: 'Breakout', desc: 'Breek de blokken met de bal.', href: '/breakout', cat: 'games', icon: 'game', external: false },
         { title: 'Baseball', desc: 'Sla de bal en scoor punten.', href: '/baseball', cat: 'games', icon: 'game', external: false },
 
-        { title: 'Tools Collectie', desc: 'Alle handige tools op één plek.', href: '/tools', cat: 'tools', icon: 'sliders', external: false },
-        { title: 'Startpagina', desc: 'Terug naar het begin van DUB5.', href: '/', cat: 'tools', icon: 'home', external: false },
-        { title: 'Kleurenkiezer', desc: 'Kies en converteer kleurcodes.', href: '/kleurenkiezer', cat: 'tools', icon: 'palette', badge: 'Nieuw', external: false },
-        { title: 'QR Generator', desc: 'Maak direct een QR-code van tekst.', href: '/qr-generator', cat: 'tools', icon: 'qr', external: false },
-        { title: 'Wachtwoord Generator', desc: 'Sterke wachtwoorden in één klik.', href: '/wachtwoord', cat: 'tools', icon: 'key', external: false },
-        { title: 'Tekst Formatter', desc: 'Tekst opmaken, tellen en opschonen.', href: '/tekst', cat: 'tools', icon: 'text', external: false },
-        { title: 'Eenheden Omrekenen', desc: 'Lengte, gewicht, temperatuur en meer.', href: '/eenheden', cat: 'tools', icon: 'ruler', external: false },
         { title: 'Numworks Scripts Manager', desc: 'Beheer en voeg scripts toe aan Numworks.', href: '/numworks', cat: 'tools', icon: 'code', badge: 'Nieuw', external: false },
-
-        { title: 'Biologie Leren', desc: 'Biologie leren met heldere uitleg.', href: '/biologie', cat: 'study', icon: 'dna', external: false },
-        { title: 'Study Tools', desc: 'Hulpmiddelen voor leren en plannen.', href: '/study-tools', cat: 'study', icon: 'book', external: false },
-        { title: 'Leerplatform', desc: 'Oefen en herhaal op je eigen tempo.', href: '/leerplatform', cat: 'study', icon: 'cap', external: false },
-        { title: 'Woordenlijst', desc: 'Alle begrippen overzichtelijk op een rij.', href: '/woordenlijst', cat: 'study', icon: 'list', external: false },
-        { title: 'Flashcards', desc: 'Snel overhoren met kaartjes.', href: '/flashcards', cat: 'study', icon: 'cards', external: false },
-        { title: 'Oefentoetsen', desc: 'Test je kennis met oefenvragen.', href: '/oefentoetsen', cat: 'study', icon: 'clipboard', external: false },
-        { title: 'Samenvattingen', desc: 'Beknopte samenvattingen per vak.', href: '/samenvattingen', cat: 'study', icon: 'note', external: false },
-
-        { title: 'Blooket Hacks', desc: 'Extra opties en tools voor Blooket.', href: '/blooket-hacks', cat: 'hacks', icon: 'target', external: false },
-        { title: 'Alle Hacks', desc: 'Het complete overzicht van alle hacks.', href: '/alle-hacks', cat: 'hacks', icon: 'layers', external: false },
-        { title: 'Kahoot Hacks', desc: 'Handige scripts voor Kahoot-sessies.', href: '/kahoot-hacks', cat: 'hacks', icon: 'gamepad', badge: 'Nieuw', external: false },
-        { title: 'Quizlet Hacks', desc: 'Sneller door je Quizlet-sets heen.', href: '/quizlet-hacks', cat: 'hacks', icon: 'flask', external: false },
-        { title: 'Gimkit Hacks', desc: 'Extra opties voor Gimkit-spellen.', href: '/gimkit-hacks', cat: 'hacks', icon: 'bolt', external: false },
-
-        { title: 'Blogs', desc: 'Technische blogs, diepgaande analyses en onderzoeken.', href: '/blogs', cat: 'guides', icon: 'pencil', badge: 'Nieuw', external: false },
-        { title: 'How-to Gidsen', desc: 'Praktische gidsen voor elke tool.', href: '/how-to', cat: 'guides', icon: 'bulb', external: false },
-        { title: 'Installatie Gids', desc: 'Alles veilig en snel installeren.', href: '/installatie', cat: 'guides', icon: 'download', external: false },
-        { title: 'Tips & Tricks', desc: 'Kleine trucs met groot effect.', href: '/tips', cat: 'guides', icon: 'star', external: false },
-        { title: 'Veelgestelde Vragen', desc: 'Antwoorden op de meestgestelde vragen.', href: '/faq', cat: 'guides', icon: 'question', external: false },
-        { title: 'Probleemoplossing', desc: 'Loopt iets vast? Lost het hier op.', href: '/problemen', cat: 'guides', icon: 'wrench', external: false },
 
         /* ---------------- GALLERY ---------------- */
         { title: 'Galerij & Herinneringen', desc: 'Funny moments, video\'s en foto\'s.', href: '/gallery', cat: 'gallery', icon: 'gallery', badge: 'Nieuw', external: false }
