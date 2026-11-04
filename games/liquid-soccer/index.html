@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+	<meta charset='utf-8' />
+	<meta name='viewport' content='width=device-width, initial-scale=1.0' />
+	<title>Liquid Soccer - DUB5</title>
+	<meta name="theme-color" content="#0b1150" />
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+	<style type='text/css'>
+		:root {
+			--line: rgba(224, 242, 254, 0.16);
+			--line-strong: rgba(224, 242, 254, 0.3);
+			--ink: rgb(226, 240, 255);
+			--ink-dim: rgba(226, 240, 255, 0.6);
+
+			--glass: rgba(9, 13, 38, 0.62);
+			--glass-hover: rgba(13, 19, 50, 0.72);
+			--glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+			--glass-shadow: 0 18px 40px -26px rgba(0, 0, 0, 1);
+			--glass-blur: blur(16px) saturate(160%);
+
+			--nav-hover-transition-duration: 300ms;
+			--nav-hover-transition-timing: ease-in-out;
+
+			--r-pill: 999px;
+			--r-panel: 18px;
+			--r-chip: 12px;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		html { -webkit-text-size-adjust: 100%; }
+
+		body {
+			min-height: 100vh;
+			background: radial-gradient(140% 100% at 50% -10%, #0b1150 0%, #050833 42%, #01030f 100%);
+			color: #fff;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+			overflow-x: hidden;
+			position: relative;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		body::before {
+			content: "";
+			position: fixed;
+			inset: -15%;
+			z-index: 0;
+			pointer-events: none;
+			background:
+				radial-gradient(42% 34% at 16% 10%, rgba(70, 110, 255, 0.20), transparent 68%),
+				radial-gradient(38% 30% at 86% 16%, rgba(150, 80, 255, 0.15), transparent 66%),
+				radial-gradient(58% 42% at 52% 108%, rgba(0, 130, 230, 0.18), transparent 72%);
+			filter: blur(26px);
+		}
+
+		.page {
+			position: relative;
+			z-index: 10;
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 3rem 1.5rem 4rem;
+		}
+
+		/* ---------- Header ---------- */
+		.game-header {
+			width: 100%;
+			max-width: 960px;
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			text-align: left;
+			margin-bottom: 2.25rem;
+		}
+
+		.back-link-fixed {
+			position: fixed;
+			top: 1rem;
+			left: 1rem;
+			z-index: 50;
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 1rem;
+			border-radius: var(--r-pill);
+			border: 1px solid var(--line);
+			background: var(--glass);
+			backdrop-filter: var(--glass-blur);
+			-webkit-backdrop-filter: var(--glass-blur);
+			box-shadow: var(--glass-inset), var(--glass-shadow);
+			color: var(--ink-dim);
+			font-size: 0.84rem;
+			font-weight: 600;
+			text-decoration: none;
+			transition:
+				color var(--nav-hover-transition-duration) var(--nav-hover-transition-timing),
+				border-color var(--nav-hover-transition-duration) var(--nav-hover-transition-timing),
+				transform var(--nav-hover-transition-duration) var(--nav-hover-transition-timing),
+				background var(--nav-hover-transition-duration) var(--nav-hover-transition-timing);
+		}
+
+		.back-link-fixed:hover,
+		.back-link-fixed:focus-visible {
+			color: #fff;
+			border-color: var(--line-strong);
+			background: var(--glass-hover);
+			transform: translateY(-2px);
+			outline: none;
+		}
+
+		.back-link-fixed:focus-visible {
+			outline: 2px solid rgba(224, 242, 254, 0.8);
+			outline-offset: 3px;
+		}
+
+		.back-link-fixed svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+		.game-title {
+			font-family: 'DM Serif Display', serif;
+			font-weight: normal;
+			font-size: 4.5rem;
+			line-height: 1;
+			letter-spacing: 0.01em;
+			color: #fff;
+			text-shadow: 0 0 60px rgba(120, 170, 255, 0.28);
+			opacity: 0;
+			animation: fade-in 700ms ease-out 80ms forwards;
+		}
+
+		.game-subline {
+			margin-top: 0.85rem;
+			font-size: 0.95rem;
+			color: var(--ink-dim);
+			opacity: 0;
+			animation: fade-in 700ms ease-out 200ms forwards;
+		}
+
+		.header-rule {
+			height: 1px;
+			width: 100%;
+			max-width: 960px;
+			margin-top: 1.75rem;
+			transform: scaleX(0);
+			transform-origin: center center;
+			background: linear-gradient(
+				90deg,
+				rgba(190, 215, 255, 0) 0%,
+				rgba(190, 215, 255, 0.35) 12%,
+				rgba(214, 232, 255, 0.72) 50%,
+				rgba(190, 215, 255, 0.35) 88%,
+				rgba(190, 215, 255, 0) 100%
+			);
+			opacity: 0.75;
+			animation: rule-draw 900ms cubic-bezier(0.22, 1, 0.36, 1) 320ms forwards;
+		}
+
+		/* ---------- Game surface ---------- */
+		.game-shell {
+			position: relative;
+			width: 100%;
+			max-width: 960px;
+			border-radius: var(--r-panel);
+			border: 1px solid var(--line);
+			background: var(--glass);
+			backdrop-filter: var(--glass-blur);
+			-webkit-backdrop-filter: var(--glass-blur);
+			box-shadow: var(--glass-inset), var(--glass-shadow);
+			padding: 1.25rem;
+			opacity: 0;
+			animation: card-in 600ms cubic-bezier(0.22, 1, 0.36, 1) 420ms forwards;
+		}
+
+		.game-stage {
+			position: relative;
+			width: 100%;
+			max-width: 960px;
+			margin: 0 auto;
+			aspect-ratio: 16 / 9;
+			border-radius: 12px;
+			overflow: hidden;
+			background: rgba(2, 4, 16, 0.72);
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+		}
+
+		#canvas {
+			display: block;
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+		}
+
+		#canvas:focus {
+			outline: none;
+		}
+
+		/* ---------- Fullscreen button ---------- */
+		.fullscreen-btn {
+			position: absolute;
+			top: 0.5rem;
+			right: 0.5rem;
+			z-index: 5;
+			width: 36px;
+			height: 36px;
+			border-radius: 8px;
+			border: 1px solid var(--line);
+			background: rgba(9, 13, 38, 0.72);
+			backdrop-filter: var(--glass-blur);
+			-webkit-backdrop-filter: var(--glass-blur);
+			box-shadow: var(--glass-inset);
+			display: grid;
+			place-items: center;
+			cursor: pointer;
+			color: var(--ink-dim);
+			transition:
+				border-color 200ms ease,
+				background 200ms ease,
+				color 200ms ease,
+				transform 200ms ease;
+			padding: 0;
+			font: inherit;
+		}
+
+		.fullscreen-btn:hover,
+		.fullscreen-btn:focus-visible {
+			border-color: var(--line-strong);
+			background: rgba(13, 19, 50, 0.82);
+			color: #fff;
+			transform: translateY(-1px);
+			outline: none;
+		}
+
+		.fullscreen-btn:focus-visible {
+			outline: 2px solid rgba(224, 242, 254, 0.8);
+			outline-offset: 2px;
+		}
+
+		.fullscreen-btn svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		.game-stage.is-fullscreen {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			border-radius: 0;
+			z-index: 1000;
+			max-width: none;
+			width: 100vw;
+			height: 100vh;
+			aspect-ratio: unset;
+		}
+
+		.game-stage.is-fullscreen #canvas {
+			width: 100%;
+			height: 100%;
+		}
+
+		.game-stage.is-fullscreen .fullscreen-btn {
+			top: 1rem;
+			right: 1rem;
+		}
+
+		/* Godot game status overlay */
+		#status {
+			position: absolute;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			visibility: hidden;
+			z-index: 10;
+		}
+
+		#status-progress {
+			width: 366px;
+			height: 20px;
+			background-color: #2f2f2f;
+			border: 1px solid #444246;
+			padding: 1px;
+			visibility: visible;
+		}
+
+		@media only screen and (orientation:portrait) {
+			#status-progress {
+				width: 61.8%;
+			}
+		}
+
+		#status-progress-inner {
+			height: 100%;
+			width: 0;
+			box-sizing: border-box;
+			transition: width 0.5s linear;
+			background-color: #efefef;
+		}
+
+		#status-indeterminate {
+			height: 42px;
+			visibility: visible;
+			position: relative;
+		}
+
+		#status-indeterminate > div {
+			width: 4.5px;
+			height: 0;
+			border-style: solid;
+			border-width: 9px 3px 0 3px;
+			border-color: #2b2b2b transparent transparent transparent;
+			transform-origin: center 21px;
+			position: absolute;
+		}
+
+		#status-indeterminate > div:nth-child(1) { transform: rotate( 22.5deg); }
+		#status-indeterminate > div:nth-child(2) { transform: rotate( 67.5deg); }
+		#status-indeterminate > div:nth-child(3) { transform: rotate(112.5deg); }
+		#status-indeterminate > div:nth-child(4) { transform: rotate(157.5deg); }
+		#status-indeterminate > div:nth-child(5) { transform: rotate(202.5deg); }
+		#status-indeterminate > div:nth-child(6) { transform: rotate(247.5deg); }
+		#status-indeterminate > div:nth-child(7) { transform: rotate(292.5deg); }
+		#status-indeterminate > div:nth-child(8) { transform: rotate(337.5deg); }
+
+		#status-notice {
+			margin: 0 100px;
+			line-height: 1.3;
+			visibility: visible;
+			padding: 4px 6px;
+			visibility: visible;
+		}
+
+		.godot {
+			font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+			color: #e0e0e0;
+			background-color: #3b3943;
+			background-image: linear-gradient(to bottom, #403e48, #35333c);
+			border: 1px solid #45434e;
+			box-shadow: 0 0 1px 1px #2f2d35;
+		}
+
+		/* Animations */
+		@keyframes fade-in {
+			from { opacity: 0; transform: translateY(6px); }
+			to   { opacity: 1; transform: translateY(0); }
+		}
+
+		@keyframes card-in {
+			from { opacity: 0; transform: translateY(9px); }
+			to   { opacity: 1; transform: translateY(0); }
+		}
+
+		@keyframes rule-draw {
+			to { transform: scaleX(1); }
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.game-title,
+			.game-subline,
+			.game-shell,
+			.header-rule {
+				animation: none !important;
+				opacity: 1;
+				transform: none;
+			}
+			.header-rule { transform: scaleX(1); }
+		}
+
+		/* Godot game styles */
+		#canvas {
+			display: block;
+			margin: 0;
+			color: white;
+		}
+
+		#canvas:focus {
+			outline: none;
+		}
+
+		.godot {
+			font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+			color: #e0e0e0;
+			background-color: #3b3943;
+			background-image: linear-gradient(to bottom, #403e48, #35333c);
+			border: 1px solid #45434e;
+			box-shadow: 0 0 1px 1px #2f2d35;
+		}
+
+		/* Status display */
+		#status {
+			position: absolute;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			visibility: hidden;
+		}
+
+		#status-progress {
+			width: 366px;
+			height: 20px;
+			background-color: #2f2f2f;
+			border: 1px solid #444246;
+			padding: 1px;
+			visibility: visible;
+		}
+
+		@media only screen and (orientation:portrait) {
+			#status-progress {
+				width: 61.8%;
+			}
+		}
+
+		#status-progress-inner {
+			height: 100%;
+			width: 0;
+			box-sizing: border-box;
+			transition: width 0.5s linear;
+			background-color: #efefef;
+		}
+
+		#status-indeterminate {
+			height: 42px;
+			visibility: visible;
+			position: relative;
+		}
+
+		#status-indeterminate > div {
+			width: 4.5px;
+			height: 0;
+			border-style: solid;
+			border-width: 9px 3px 0 3px;
+			border-color: #2b2b2b transparent transparent transparent;
+			transform-origin: center 21px;
+			position: absolute;
+		}
+
+		#status-indeterminate > div:nth-child(1) { transform: rotate( 22.5deg); }
+		#status-indeterminate > div:nth-child(2) { transform: rotate( 67.5deg); }
+		#status-indeterminate > div:nth-child(3) { transform: rotate(112.5deg); }
+		#status-indeterminate > div:nth-child(4) { transform: rotate(157.5deg); }
+		#status-indeterminate > div:nth-child(5) { transform: rotate(202.5deg); }
+		#status-indeterminate > div:nth-child(6) { transform: rotate(247.5deg); }
+		#status-indeterminate > div:nth-child(7) { transform: rotate(292.5deg); }
+		#status-indeterminate > div:nth-child(8) { transform: rotate(337.5deg); }
+
+		#status-notice {
+			margin: 0 100px;
+			line-height: 1.3;
+			visibility: visible;
+			padding: 4px 6px;
+			visibility: visible;
+		}
+	</style>
+	</style>
+	<script>
+		console.log('Liquid Soccer: Loading...');
+
+		// Initialize canvas dimensions before Godot loads
+		const canvas = document.getElementById('canvas');
+		if (canvas) {
+			canvas.width = 1280;
+			canvas.height = 720;
+		}
+
+		// Only prevent game keys when canvas is focused
+		window.addEventListener('keydown', ev => {
+			// Allow Ctrl+Shift+I and Ctrl+Shift+J for developer tools
+			if (ev.ctrlKey && ev.shiftKey && (ev.key === 'I' || ev.key === 'J')) {
+				return;
+			}
+			// Allow ESC key
+			if (ev.key === 'Escape') {
+				return;
+			}
+			// Only prevent default for game keys when canvas is focused
+			if (document.activeElement === canvas && ['ArrowDown', 'ArrowUp', ' '].includes(ev.key)) {
+				ev.preventDefault();
+			}
+		});
+
+		// Remove wheel prevention to allow scrolling
+		// Only prevent wheel when canvas is focused
+		window.addEventListener('wheel', ev => {
+			if (document.activeElement === canvas) {
+				ev.preventDefault();
+			}
+		}, { passive: false });
+
+		// Focus canvas when clicked
+		if (canvas) {
+			canvas.addEventListener('click', () => {
+				canvas.focus();
+			});
+		}
+	</script>
+
+</head>
+<body>
+	<a class="back-link-fixed" href="/">
+		<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M19 12H5M12 19l-7-7 7-7"/>
+		</svg>
+		Terug
+	</a>
+
+	<div class="page">
+		<header class="game-header">
+			<h1 class="game-title">Liquid Soccer</h1>
+			<p class="game-subline">Vloeibare voetbal — dynamisch en verslavend.</p>
+		</header>
+
+		<div class="header-rule" aria-hidden="true"></div>
+
+		<section class="game-shell" aria-label="Speelveld">
+			<div class="game-stage" id="gameStage">
+				<canvas id='canvas' aria-label="Liquid Soccer speelveld">
+					HTML5 canvas appears to be unsupported in the current browser.<br />
+					Please try updating or use a different browser.
+				</canvas>
+
+				<button class="fullscreen-btn" id="fullscreenBtn" type="button" aria-label="Volledig scherm">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+					</svg>
+				</button>
+
+				<div id='status'>
+					<div id='status-progress' style='display: none;' oncontextmenu='event.preventDefault();'><div id ='status-progress-inner'></div></div>
+					<div id='status-indeterminate' style='display: none;' oncontextmenu='event.preventDefault();'>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+						<div></div>
+					</div>
+					<div id='status-notice' class='godot' style='display: none;'></div>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<script type='text/javascript' src='index.js'></script>
+	<script type='text/javascript'>//<![CDATA[
+		console.log('Liquid Soccer: Loading game engine...');
+
+		const GODOT_CONFIG = {
+			"args": [],
+			"canvasResizePolicy": 0,
+			"executable": "index",
+			"experimentalVK": false,
+			"fileSizes": {
+				"index.pck": 13430320,
+				"index.wasm": 13789463
+			},
+			"focusCanvas": false,
+			"gdnativeLibs": [],
+			"serviceWorker": "index.service.worker.js"
+		};
+		
+		var engine = new Engine(GODOT_CONFIG);
+		
+		// Load Engine from Godot
+		function loadScript(src, callback) {
+			const script = document.createElement('script');
+			script.src = src;
+			script.onload = callback;
+			script.onerror = () => {
+				console.error('Failed to load:', src);
+				callback();
+			};
+			document.head.appendChild(script);
+		}
+
+		function startGameLoading() {
+			const INDETERMINATE_STATUS_STEP_MS = 100;
+			var statusProgress = document.getElementById('status-progress');
+			var statusProgressInner = document.getElementById('status-progress-inner');
+			var statusIndeterminate = document.getElementById('status-indeterminate');
+			var statusNotice = document.getElementById('status-notice');
+
+			var initializing = true;
+			var statusMode = 'hidden';
+
+			var animationCallbacks = [];
+			function animate(time) {
+				animationCallbacks.forEach(callback => callback(time));
+				requestAnimationFrame(animate);
+			}
+			requestAnimationFrame(animate);
+
+			function setStatusMode(mode) {
+
+				if (statusMode === mode || !initializing)
+					return;
+				[statusProgress, statusIndeterminate, statusNotice].forEach(elem => {
+					elem.style.display = 'none';
+				});
+				animationCallbacks = animationCallbacks.filter(function(value) {
+					return (value != animateStatusIndeterminate);
+				});
+				switch (mode) {
+					case 'progress':
+						statusProgress.style.display = 'block';
+						break;
+					case 'indeterminate':
+						statusIndeterminate.style.display = 'block';
+						animationCallbacks.push(animateStatusIndeterminate);
+						break;
+					case 'notice':
+						statusNotice.style.display = 'block';
+						break;
+					case 'hidden':
+						break;
+					default:
+						throw new Error('Invalid status mode');
+				}
+				statusMode = mode;
+			}
+
+			function animateStatusIndeterminate(ms) {
+				var i = Math.floor(ms / INDETERMINATE_STATUS_STEP_MS % 8);
+				if (statusIndeterminate.children[i].style.borderTopColor == '') {
+					Array.prototype.slice.call(statusIndeterminate.children).forEach(child => {
+						child.style.borderTopColor = '';
+					});
+					statusIndeterminate.children[i].style.borderTopColor = '#dfdfdf';
+				}
+			}
+
+			function setStatusNotice(text) {
+				while (statusNotice.lastChild) {
+					statusNotice.removeChild(statusNotice.lastChild);
+				}
+				var lines = text.split('\n');
+				lines.forEach((line) => {
+					statusNotice.appendChild(document.createTextNode(line));
+					statusNotice.appendChild(document.createElement('br'));
+				});
+			};
+
+			function displayFailureNotice(err) {
+				var msg = err.message || err;
+				console.error(msg);
+				setStatusNotice(msg);
+				setStatusMode('notice');
+				initializing = false;
+			};
+
+			// Add user gesture handler for audio context
+			document.addEventListener('click', function initAudio() {
+				if (typeof engine !== 'undefined' && engine.initAudio) {
+					engine.initAudio();
+				}
+				document.removeEventListener('click', initAudio);
+			}, { once: true });
+
+			if (!Engine.isWebGLAvailable()) {
+				displayFailureNotice('WebGL not available');
+			} else {
+				setStatusMode('indeterminate');
+				engine.startGame({
+					'onProgress': function (current, total) {
+						if (total > 0) {
+							statusProgressInner.style.width = current/total * 100 + '%';
+							setStatusMode('progress');
+							if (current === total) {
+								// wait for progress bar animation
+								setTimeout(() => {
+									setStatusMode('indeterminate');
+								}, 500);
+							}
+						} else {
+							setStatusMode('indeterminate');
+						}
+					},
+				}).then(() => {
+					setStatusMode('hidden');
+					initializing = false;
+					console.log('Liquid Soccer: Game loaded successfully!');
+				}, displayFailureNotice);
+			}
+		}
+
+		// Start game loading
+		startGameLoading();
+
+		// =========================================================
+		// FULLSCREEN FUNCTIONALITY
+		// =========================================================
+		const fullscreenBtn = document.getElementById('fullscreenBtn');
+		const gameStage = document.getElementById('gameStage');
+		const canvasElement = document.getElementById('canvas');
+
+		fullscreenBtn.addEventListener('click', () => {
+			if (!document.fullscreenElement) {
+				gameStage.classList.add('is-fullscreen');
+				gameStage.requestFullscreen().catch(err => {
+					console.error('Fullscreen failed:', err);
+					gameStage.classList.remove('is-fullscreen');
+				});
+			} else {
+				document.exitFullscreen();
+			}
+		});
+
+		document.addEventListener('fullscreenchange', () => {
+			if (!document.fullscreenElement) {
+				gameStage.classList.remove('is-fullscreen');
+				// Resize canvas when exiting fullscreen
+				if (canvasElement && typeof engine !== 'undefined') {
+					setTimeout(() => {
+						const rect = gameStage.getBoundingClientRect();
+						canvasElement.width = rect.width;
+						canvasElement.height = rect.height;
+					}, 100);
+				}
+			} else {
+				// Resize canvas when entering fullscreen
+				if (canvasElement && typeof engine !== 'undefined') {
+					setTimeout(() => {
+						canvasElement.width = window.screen.width;
+						canvasElement.height = window.screen.height;
+					}, 100);
+				}
+			}
+		});
+
+		// ESC key to exit fullscreen
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && document.fullscreenElement) {
+				document.exitFullscreen();
+			}
+		});
+//]]></script>
+</body>
+</html>
+

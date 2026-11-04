@@ -84,6 +84,12 @@ app.get('/sudoku', (req, res) => {
   res.sendFile(path.join(__dirname, 'games', 'sudoku', 'index.html'));
 });
 
+// Serve static assets for liquid-soccer (must be before the route)
+app.use('/liquid-soccer', express.static(path.join(__dirname, 'games', 'liquid-soccer')));
+
+// Serve static assets for liquid-soccer (must be before the route)
+app.use('/liquid-soccer', express.static(path.join(__dirname, 'games', 'liquid-soccer')));
+
 app.get('/gnomelauncher', (req, res) => {
   res.sendFile(path.join(__dirname, 'games', 'gnomelauncher', 'index.html'));
 });
@@ -94,6 +100,14 @@ app.get('/breakout', (req, res) => {
 
 app.get('/baseball', (req, res) => {
   res.sendFile(path.join(__dirname, 'games', 'baseball', 'index.html'));
+});
+
+app.get('/liquid-soccer', (req, res) => {
+  res.sendFile(path.join(__dirname, 'games', 'liquid-soccer', 'index.html'));
+});
+
+app.get('/cijferkaart', (req, res) => {
+  res.sendFile(path.join(__dirname, 'cijferkaart', 'index.html'));
 });
 
 // Tools routes
@@ -234,8 +248,8 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`DUB5 running at http://localhost:${PORT}`);
-  console.log(`Games: /snake, /minesweeper, /blockblast, /rekenmachine, /2048, /tetris, /memory, /flappy, /pong, /sudoku, /gnomelauncher, /breakout, /baseball`);
-  console.log(`Tools: /tools, /kleurenkiezer, /qr-generator, /wachtwoord, /tekst, /eenheden, /numworks`);
+  console.log(`Games: /snake, /minesweeper, /blockblast, /rekenmachine, /2048, /tetris, /memory, /flappy, /pong, /sudoku, /gnomelauncher, /breakout, /baseball, /liquid-soccer, /cijferkaart`);
+  console.log(`Tools: /tools, /kleurenkiezer, /qr-generator, /wachtwoord, /tekst, /eenheden, /numworks, /cijferkaart`);
   console.log(`Study: /biologie, /study-tools, /leerplatform, /woordenlijst, /flashcards, /oefentoetsen, /samenvattingen`);
   console.log(`Hacks: /blooket-hacks, /alle-hacks, /kahoot-hacks, /quizlet-hacks, /gimkit-hacks`);
   console.log(`Guides: /blogs, /handleidingen, /how-to, /installatie, /tips, /faq, /problemen`);

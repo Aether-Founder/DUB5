@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CIJFERKAART — Ultimate Team Pack Simulator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:#03050a;color:#e9eff8;
+  font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  overflow:hidden;-webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit}
+
+/* ---------- ACHTERGROND ---------- */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 6%,#0e1c2e 0%,#070c15 42%,#020407 100%)}
+#bg .beam{position:absolute;top:-40%;width:18vw;height:170vh;transform-origin:top center;
+  background:linear-gradient(to bottom,rgba(130,195,255,.20),rgba(120,180,255,.04) 42%,transparent 68%);
+  filter:blur(22px);opacity:.55;mix-blend-mode:screen;animation:beamSway 16s ease-in-out infinite alternate}
+#bg .b1{left:2%;transform:rotate(12deg);animation-delay:-2s}
+#bg .b2{left:16%;transform:rotate(6deg);opacity:.35;animation-delay:-6s}
+#bg .b3{left:42%;transform:rotate(-2deg);opacity:.28;animation-delay:-10s}
+#bg .b4{left:62%;transform:rotate(-8deg);opacity:.4;animation-delay:-4s}
+#bg .b5{left:80%;transform:rotate(-14deg);animation-delay:-8s}
+#bg .b6{left:92%;transform:rotate(-20deg);opacity:.3;animation-delay:-12s}
+@keyframes beamSway{from{transform:rotate(4deg) translateX(-2vw)}to{transform:rotate(-6deg) translateX(2vw)}}
+#bg .floor{position:absolute;left:-25%;right:-25%;bottom:-8vh;height:56vh;
+  background:radial-gradient(58% 100% at 50% 100%,rgba(72,150,225,.22),rgba(30,70,120,.06) 55%,transparent 76%);filter:blur(14px)}
+#bg .pitch{position:absolute;left:50%;bottom:-34vh;width:150vw;height:86vh;
+  transform:translateX(-50%) perspective(700px) rotateX(72deg);
+  background:radial-gradient(closest-side,rgba(130,200,255,.06) 0%,transparent 78%);
+  -webkit-mask-image:radial-gradient(closest-side,#000 0%,transparent 78%);
+  mask-image:radial-gradient(closest-side,#000 0%,transparent 78%);opacity:.85}
+#bg .vignette{position:absolute;inset:0;
+  background:radial-gradient(ellipse 70% 60% at 50% 42%,transparent 28%,rgba(0,0,0,.55) 72%,rgba(0,0,0,.9) 100%)}
+#bg .grain{position:absolute;inset:0;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#fx{position:fixed;inset:0;z-index:60;pointer-events:none}
+
+/* ---------- APP GRID ---------- */
+#app{position:relative;z-index:2;height:100%;display:grid;grid-template-rows:64px minmax(0,1fr) auto}
+
+/* ---------- TOPBAR ---------- */
+.topbar{display:flex;align-items:center;gap:18px;padding:0 22px;position:relative;z-index:6;
+  background:linear-gradient(180deg,rgba(8,13,22,.94),rgba(6,10,17,.5));
+  border-bottom:1px solid rgba(255,255,255,.07);backdrop-filter:blur(16px)}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mark{width:34px;height:34px;filter:drop-shadow(0 0 12px rgba(120,180,255,.4))}
+.brand-name{display:block;font-size:14px;font-weight:800;letter-spacing:.24em;color:#f2f7ff;line-height:1.1}
+.brand-sub{display:block;font-size:8px;letter-spacing:.34em;color:#7f93ad;font-weight:700;margin-top:2px}
+.nav{display:flex;gap:2px;margin-left:14px}
+.nav-btn{appearance:none;background:transparent;border:0;color:#8ea1b8;font-size:11px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;padding:10px 14px;border-radius:8px;cursor:pointer;
+  position:relative;transition:color .2s,background .2s}
+.nav-btn:hover{color:#dbe6f4;background:rgba(255,255,255,.05)}
+.nav-btn.is-active{color:#fff}
+.nav-btn.is-active::after{content:"";position:absolute;left:14px;right:14px;bottom:3px;height:2px;
+  border-radius:2px;background:linear-gradient(90deg,transparent,#7fb6ff,transparent);box-shadow:0 0 10px #7fb6ff}
+.topbar-right{margin-left:auto;display:flex;gap:18px}
+.stat{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.stat-label{font-size:7.5px;letter-spacing:.2em;color:#6d8098;font-weight:700}
+.stat-value{font-size:15px;font-weight:800;color:#dceaff;letter-spacing:.04em;text-shadow:0 0 14px rgba(120,180,255,.45)}
+
+/* ---------- STAGE ---------- */
+.stage{position:relative;overflow:hidden}
+.scene-wrap{position:absolute;inset:0;display:grid;place-items:center;padding-bottom:74px}
+.scene{position:relative;width:320px;height:450px}
+.stage-ui{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:9;
+  display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;
+  pointer-events:none;width:min(620px,92vw)}
+.stage-ui>*{pointer-events:auto}
+.ui-kicker{font-size:8px;letter-spacing:.34em;font-weight:800;color:#7b90a9}
+.ui-title{font-size:15px;font-weight:800;letter-spacing:.16em;color:#eaf3ff;text-shadow:0 0 22px rgba(120,180,255,.45)}
+.ui-hint{font-size:9.5px;letter-spacing:.18em;color:#6d8098;font-weight:600}
+.btn-row{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+.btn-primary{appearance:none;cursor:pointer;border:0;border-radius:8px;padding:12px 30px;
+  font-size:11px;font-weight:900;letter-spacing:.2em;color:#06121f;
+  background:linear-gradient(180deg,#fff 0%,#bfe0ff 38%,#74b4f5 100%);
+  box-shadow:0 0 0 1px rgba(180,220,255,.7),0 10px 28px -12px rgba(120,190,255,.95),inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .16s,box-shadow .2s,filter .2s;position:relative;overflow:hidden}
+.btn-primary::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent 34%,rgba(255,255,255,.85) 48%,transparent 62%);
+  background-size:250% 100%;animation:btnShine 3.2s linear infinite}
+@keyframes btnShine{0%{background-position:-120% 0}100%{background-position:220% 0}}
+.btn-primary:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.btn-primary:active{transform:translateY(1px) scale(.99)}
+.btn-ghost{appearance:none;cursor:pointer;border-radius:8px;padding:11px 20px;font-size:10px;
+  font-weight:800;letter-spacing:.18em;color:#cfe2f7;background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.14);transition:background .2s,border-color .2s,transform .16s}
+.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:rgba(160,205,255,.45);transform:translateY(-1px)}
+
+/* ---------- PAKKET ---------- */
+.pack-wrap{position:absolute;inset:0;display:grid;place-items:center;perspective:1500px;
+  transition:opacity .3s,transform .3s}
+.pack-wrap.is-burst{transform:scale(1);opacity:0}
+.pack-wrap.is-hidden{opacity:0;pointer-events:none}
+.pack-idle{transform-style:preserve-3d;animation:floatPack 7s ease-in-out infinite}
+@keyframes floatPack{
+  0%{transform:rotateX(6deg) rotateY(-15deg) translateY(-8px)}
+  50%{transform:rotateX(3deg) rotateY(12deg) translateY(8px)}
+  100%{transform:rotateX(6deg) rotateY(-15deg) translateY(-8px)}}
+.pack{position:relative;transform-style:preserve-3d;--pw:300px;--ph:420px;--pd:26px;width:var(--pw);height:var(--ph)}
+.pack-wrap.is-charging .pack{animation:chargeShake .46s linear infinite}
+.pack-wrap.is-charging.intense .pack{animation-duration:.2s}
+@keyframes chargeShake{
+  0%,100%{transform:translate3d(0,0,0) rotate(0)}
+  20%{transform:translate3d(-2.5px,1.5px,0) rotate(-.7deg)}
+  40%{transform:translate3d(2.5px,-1.5px,0) rotate(.8deg)}
+  60%{transform:translate3d(-2px,2.5px,0) rotate(-.6deg)}
+  80%{transform:translate3d(2px,-2.5px,0) rotate(.7deg)}}
+.pf{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:0;opacity:0}
+.pf-front{transform:translateZ(calc(var(--pd)/2));overflow:hidden;opacity:1}
+.pf-back{transform:rotateY(180deg) translateZ(calc(var(--pd)/2));background:transparent}
+.pf-right{width:var(--pd);height:100%;left:calc(50% - var(--pd)/2);transform:rotateY(90deg) translateZ(calc(var(--pw)/2));background:transparent}
+.pf-left{width:var(--pd);height:100%;left:calc(50% - var(--pd)/2);transform:rotateY(-90deg) translateZ(calc(var(--pw)/2));background:transparent}
+.pf-top{height:var(--pd);top:calc(50% - var(--pd)/2);transform:rotateX(90deg) translateZ(calc(var(--ph)/2));background:transparent}
+.pf-bottom{height:var(--pd);top:calc(50% - var(--pd)/2);transform:rotateX(-90deg) translateZ(calc(var(--ph)/2));background:transparent}
+.pack-wrap[data-theme="bronze"]{--pk1:#241609;--pk2:#120b05;--pk-m1:#d9a06a;--pk-m2:#8a5a30;--pk-glow:rgba(216,150,90,.5)}
+.pack-wrap[data-theme="silver"]{--pk1:#16202e;--pk2:#080c13;--pk-m1:#d7e4f2;--pk-m2:#7e8fa3;--pk-glow:rgba(160,200,240,.5)}
+.pack-wrap[data-theme="gold"]{--pk1:#2b2008;--pk2:#100b03;--pk-m1:#ffeeb8;--pk-m2:#c99a3c;--pk-glow:rgba(255,210,110,.6)}
+.pack-wrap[data-theme="icon"]{--pk1:#221a08;--pk2:#06050a;--pk-m1:#fff7d2;--pk-m2:#e2b457;--pk-glow:rgba(255,225,140,.7)}
+.pack-wrap[data-theme="cultuur"]{--pk1:#4a1a3a;--pk2:#1a0a2a;--pk-m1:#ff6b9b;--pk-m2:#b8406a;--pk-glow:rgba(255,107,155,.5)}
+.pack-wrap[data-theme="mens"]{--pk1:#2a3a5a;--pk2:#0a2a2a;--pk-m1:#6bb9ff;--pk-m2:#3a5090;--pk-glow:rgba(107,185,255,.5)}
+.pack-wrap[data-theme="natuur"]{--pk1:#1a4a2a;--pk2:#0a2a1a;--pk-m1:#6bff8a;--pk-m2:#409060;--pk-glow:rgba(107,255,138,.5)}
+.pack-wrap[data-theme="talen"]{--pk1:#4a3a1a;--pk2:#2a1a0a;--pk-m1:#ffb86b;--pk-m2:#906040;--pk-glow:rgba(255,184,107,.5)}
+.pack-wrap[data-theme="toetsweek"]{--pk1:#5a4a1a;--pk2:#2a1a1a;--pk-m1:#ff6b8a;--pk-m2:#b84050;--pk-glow:rgba(255,107,138,.5)}
+.pack-wrap[data-theme="magenta"]{--pk1:#4a1a4a;--pk2:#2a0a2a;--pk-m1:#ff6bff;--pk-m2:#b84090;--pk-glow:rgba(255,107,255,.6)}
+.pf-front{background:transparent;
+  box-shadow:none}
+.pack-img{position:absolute;inset:0;z-index:0;overflow:hidden}
+.pack-img img{width:100%;height:100%;object-fit:cover;opacity:1;filter:saturate(1) brightness(1)}
+.pack-bg{display:none}
+.pack-lines{display:none}
+.pack-frame{display:none}
+.pack-crest{display:none}
+.pack-text{display:none}
+.pack-foil{display:none}
+@keyframes foilSweep{0%{background-position:0% 0%}100%{background-position:220% 220%}}
+.pack-leak{display:none}
+@keyframes leakPulse{from{opacity:.45}to{opacity:1}}
+
+/* ---------- KAART VOORZIJDE ---------- */
+.card-front{border-radius:0;overflow:hidden;color:var(--txt,#fff);
+  background:transparent;
+  box-shadow:none;
+  isolation:isolate}
+.card-image{position:absolute;inset:0;z-index:0;overflow:hidden}
+.card-image img{width:100%;height:100%;object-fit:cover;opacity:1;filter:saturate(1) contrast(1)}
+.card-tint{display:none}
+.card-vignette{display:none}
+.card-frame-outer{display:none}
+.card-frame-inner{display:none}
+.orn-layer{display:none}
+.card-content{display:none}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rarity-chip{font-size:8px;font-weight:800;letter-spacing:.18em;padding:4px 9px;border-radius:3px;color:var(--accent2);
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(0,0,0,.42));
+  border:1px solid var(--line,rgba(255,255,255,.25));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 0 14px -4px var(--glow);
+  text-shadow:0 0 10px var(--glow);white-space:nowrap}
+.edition-mark{font-size:7px;letter-spacing:.22em;font-weight:700;color:rgba(255,255,255,.44);white-space:nowrap}
+.card-subject{margin-top:10px;font-size:17px;font-weight:900;letter-spacing:.16em;text-align:center;color:var(--txt);
+  text-shadow:0 2px 12px rgba(0,0,0,.95),0 0 22px var(--glow)}
+.grade-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:6;width:100%;pointer-events:none}
+.grade-num{display:flex;align-items:baseline;justify-content:center;font-size:92px;font-weight:900;line-height:.82;
+  letter-spacing:-.035em;color:var(--accent2);
+  text-shadow:0 0 34px var(--glow),0 4px 0 rgba(0,0,0,.6),0 8px 26px rgba(0,0,0,.85);font-variant-numeric:tabular-nums}
+.grade-num .g-dec{font-size:.68em;letter-spacing:-.02em}
+.grade-cap{margin-top:8px;font-size:9px;letter-spacing:.42em;font-weight:800;color:rgba(255,255,255,.52);text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.card-title{position:absolute;left:0;right:0;bottom:72px;padding:0 26px;text-align:center;font-size:9px;line-height:1.45;
+  letter-spacing:.04em;color:rgba(255,255,255,.72);text-shadow:0 2px 8px rgba(0,0,0,.95)}
+.card-meta{position:absolute;left:0;right:0;bottom:20px;display:flex;justify-content:center;gap:28px}
+.meta-item{text-align:center}
+.meta-item span{display:block;font-size:7px;letter-spacing:.26em;color:rgba(255,255,255,.45);font-weight:800}
+.meta-item b{display:block;margin-top:3px;font-size:13px;font-weight:900;color:var(--accent);text-shadow:0 0 10px var(--glow)}
+.foil{display:none}
+.glare{display:none}
+.cf-edge{display:none}
+
+/* ---------- RARITY PALETTEN ---------- */
+[data-rarity="crisis"]{--mat1:#2e0709;--mat2:#0b0203;--mat3:#1d0407;--metal1:#a85a5a;--metal2:#5a1c20;--metal3:#2a0a0c;--metal4:#c07a72;--accent:#ff6a55;--accent2:#ffd9d2;--line:rgba(255,120,105,.32);--glow:rgba(255,70,55,.45);--txt:#ffeae6}
+[data-rarity="onvoldoende"]{--mat1:#2d1c0d;--mat2:#0d0805;--mat3:#1e130a;--metal1:#dda671;--metal2:#8c5c32;--metal3:#3a2412;--metal4:#c08a55;--accent:#eaa964;--accent2:#ffe2c0;--line:rgba(220,160,100,.3);--glow:rgba(220,150,80,.42);--txt:#fdf0e2}
+[data-rarity="voldoende"]{--mat1:#1b2632;--mat2:#070b10;--mat3:#111a24;--metal1:#d0dae6;--metal2:#7f90a3;--metal3:#3a4655;--metal4:#b8c8d8;--accent:#a5c9ea;--accent2:#eaf4ff;--line:rgba(190,215,240,.26);--glow:rgba(130,180,230,.38);--txt:#eef6ff}
+[data-rarity="sterk"]{--mat1:#101c2e;--mat2:#050810;--mat3:#0b1524;--metal1:#e8f2ff;--metal2:#90aac9;--metal3:#3c4f6b;--metal4:#d0e4ff;--accent:#7cb2ff;--accent2:#dcecff;--line:rgba(160,200,255,.3);--glow:rgba(90,150,255,.45);--txt:#eff5ff}
+[data-rarity="elite"]{--mat1:#1c1134;--mat2:#06040f;--mat3:#130b28;--metal1:#f2ecff;--metal2:#a08de6;--metal3:#4c3a8a;--metal4:#dccfff;--accent:#bd97ff;--accent2:#97ecff;--line:rgba(190,160,255,.32);--glow:rgba(160,120,255,.5);--txt:#f6f1ff}
+[data-rarity="wereldklasse"]{--mat1:#33250a;--mat2:#0a0703;--mat3:#201707;--metal1:#fff0c0;--metal2:#dcae4e;--metal3:#7c561a;--metal4:#fff4cc;--accent:#ffcf63;--accent2:#fff2c2;--line:rgba(255,215,130,.35);--glow:rgba(255,200,80,.55);--txt:#fff9e6}
+[data-rarity="goat"]{--mat1:#3a2a0a;--mat2:#07050a;--mat3:#241807;--metal1:#fffbe6;--metal2:#f2cb6c;--metal3:#6a4a10;--metal4:#fff9d4;--accent:#ffdb7d;--accent2:#fff;--line:rgba(255,235,160,.42);--glow:rgba(255,215,120,.7);--txt:#fffdf3}
+[data-rarity="goat"] .foil{opacity:.22;background:linear-gradient(112deg,transparent 28%,rgba(255,255,255,.95) 42%,rgba(160,240,255,.65) 47%,rgba(255,180,255,.6) 52%,transparent 64%);background-size:220% 220%}
+
+/* ---------- CARD TYPE PALETTEN (BASED ON SUBJECT) ---------- */
+[data-type="cultuur"]{--mat1:#4a1a3a;--mat2:#1a0a2a;--mat3:#2d0a0a;--metal1:#ff6b9b;--metal2:#b8406a;--metal3:#703040;--metal4:#ffaacc;--accent:#ff6b9b;--accent2:#ffb8b8;--line:rgba(255,107,155,.32);--glow:rgba(255,107,155,.45);--txt:#ffe8f0}
+[data-type="mens"]{--mat1:#2a3a5a;--mat2:#0a2a2a;--mat3:#151525;--metal1:#6bb9ff;--metal2:#3a5090;--metal3:#1a3050;--metal4:#a0c0ff;--accent:#6bb9ff;--accent2:#a8c0ff;--line:rgba(107,185,255,.32);--glow:rgba(107,185,255,.45);--txt:#e8f0ff}
+[data-type="natuur"]{--mat1:#1a4a2a;--mat2:#0a2a1a;--mat3:#0a1515;--metal1:#6bff8a;--metal2:#409060;--metal3:#206040;--metal4:#80e090;--accent:#6bff8a;--accent2:#a0d0a0;--line:rgba(107,255,138,.32);--glow:rgba(107,255,138,.45);--txt:#e8fff0}
+[data-type="talen"]{--mat1:#4a3a1a;--mat2:#2a1a0a;--mat3:#251515;--metal1:#ffb86b;--metal2:#906040;--metal3:#504020;--metal4:#e0a080;--accent:#ffb86b;--accent2:#d0a050;--line:rgba(255,184,107,.32);--glow:rgba(255,184,107,.45);--txt:#fff8e8}
+[data-type="toetsweek"]{--mat1:#5a4a1a;--mat2:#2a1a1a;--mat3:#1a0a15;--metal1:#ff6b8a;--metal2:#b84050;--metal3:#603020;--metal4:#e0a050;--accent:#ff6b8a;--accent2:#d0a050;--line:rgba(255,107,138,.32);--glow:rgba(255,107,138,.45);--txt:#fff8e8}
+
+/* ============================================================
+   CINEMATIC OVERLAY — 3D CAMERA FLY-THROUGH
+============================================================ */
+.cinematic{position:fixed;inset:0;z-index:500;background:#000;overflow:hidden;display:none}
+.cinematic.active{display:block}
+#warpCanvas{display:none}
+.cine-beams{display:none}
+#cineFX{position:absolute;inset:0;z-index:8;pointer-events:none}
+
+/* --- 3D wereld --- */
+.cine-3d{position:absolute;inset:0;z-index:5;perspective:620px;perspective-origin:50% 50%;transition:opacity .4s}
+.cine-3d.shake{animation:cineShake .55s ease-in-out}
+@keyframes cineShake{
+  0%,100%{transform:translate(0,0)}
+  10%{transform:translate(-5px,3px)}20%{transform:translate(4px,-4px)}
+  30%{transform:translate(-3px,5px)}40%{transform:translate(5px,-3px)}
+  50%{transform:translate(-4px,-5px)}60%{transform:translate(3px,4px)}
+  70%{transform:translate(-5px,-2px)}80%{transform:translate(4px,3px)}
+  90%{transform:translate(-3px,-4px)}}
+.cine-world{position:absolute;inset:0;transform-style:preserve-3d;will-change:transform}
+
+/* golf-vlakken in 3D */
+.w-plane{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;
+  transform:translate(-50%,-50%) translateZ(-1200px)}
+.w-plane.animate-in{animation:planeEnter 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards}
+.w-plane.animate-out{animation:planeExit 800ms cubic-bezier(0.4, 0, 0.6, 1) forwards}
+@keyframes planeEnter{to{transform:translate(-50%,-50%) translateZ(0px)}}
+@keyframes planeExit{to{transform:translate(-50%,-50%) translateZ(600px)}}
+.w-center{position:absolute;left:0;top:0;transform:translate(-50%,-50%);transform-style:preserve-3d;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.w-gate{position:absolute;left:50%;top:50%;width:82vmin;height:82vmin;transform:translate(-50%,-50%);
+  border-radius:50%;border:2px solid var(--wave-glow,rgba(120,180,255,.5));
+  box-shadow:0 0 90px var(--wave-glow), inset 0 0 90px var(--wave-glow);opacity:0;filter:blur(20px);
+  transition:opacity .5s ease}
+.w-plane.lit .w-gate{opacity:.8;filter:blur(20px)}
+.w-inner{position:relative;text-align:center;opacity:0;
+  transform:scale(0.5);filter:blur(6px)}
+.w-inner.animate-in{animation:innerEnter 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards}
+.w-inner.animate-out{animation:innerExit 800ms cubic-bezier(0.4, 0, 0.6, 1) forwards}
+@keyframes innerEnter{to{opacity:1;transform:scale(1);filter:blur(0)}}
+@keyframes innerExit{to{opacity:0;transform:scale(1.8);filter:blur(12px)}}
+.w-label{font-size:clamp(8px,1.2vw,12px);letter-spacing:.5em;font-weight:800;
+  color:rgba(255,255,255,.55);margin-bottom:20px;text-transform:uppercase;transition:font-size .3s ease}
+.w-text{font-size:clamp(24px,5vw,80px);font-weight:900;letter-spacing:.06em;line-height:1;
+  color:var(--wave-color,#fff);text-transform:uppercase;white-space:nowrap;transition:font-size .3s ease;
+  text-shadow:0 0 50px var(--wave-glow),0 0 110px var(--wave-glow),0 8px 32px rgba(0,0,0,.9),0 0 30px var(--wave-glow);
+  padding:0 40px;filter:drop-shadow(0 0 20px var(--wave-glow))}
+.w-grade{display:flex;align-items:baseline;justify-content:center;
+  font-size:clamp(48px,12vw,160px);font-weight:900;line-height:.82;letter-spacing:-.04em;transition:font-size .3s ease;
+  color:var(--wave-color,#fff);font-variant-numeric:tabular-nums;
+  text-shadow:0 0 70px var(--wave-glow),0 0 150px var(--wave-glow),0 12px 44px rgba(0,0,0,.9),0 0 40px var(--wave-glow);
+  filter:drop-shadow(0 0 30px var(--wave-glow))}
+.w-grade .g-dec{font-size:.64em;letter-spacing:-.02em}
+.w-cap{margin-top:22px;font-size:clamp(8px,1.1vw,12px);letter-spacing:.4em;font-weight:800;
+  color:rgba(255,255,255,.6);text-transform:uppercase;transition:font-size .3s ease}
+
+
+/* --- pakket in cinematic --- */
+.cine-pack-stage{position:absolute;inset:0;display:grid;place-items:center;perspective:1500px;
+  z-index:10;opacity:0;pointer-events:none;transition:opacity .35s}
+.cine-pack-stage.active{opacity:1;pointer-events:auto}
+.cine-pack-stage .pack-bg,.cine-pack-stage .pack-lines,.cine-pack-stage .pack-frame,
+.cine-pack-stage .pack-crest,.cine-pack-stage .pack-text,.cine-pack-stage .pack-foil,.cine-pack-stage .pack-leak{display:none}
+.cine-pack-stage .pack-img img{opacity:1;filter:saturate(1) brightness(1)}
+
+/* --- overlays in cinematic --- */
+.cine-flash{display:none}
+.cine-shock{display:none}
+@keyframes cineShockOut{0%{opacity:.92;transform:scale(.18)}100%{opacity:0;transform:scale(11)}}
+.cine-vignette{position:absolute;inset:0;z-index:24;pointer-events:none;
+  background:radial-gradient(ellipse 75% 65% at 50% 50%,transparent 30%,rgba(0,0,0,.7) 100%);
+  transition:background 1s ease}
+.cine-vignette.intense{background:radial-gradient(ellipse 90% 75% at 50% 50%,transparent 20%,rgba(0,0,0,.85) 100%)}
+.cine-scanlines{display:none}
+
+/* --- cinematic kaart --- */
+.cine-card-stage{position:absolute;inset:0;z-index:20;display:none;place-items:center;perspective:2000px}
+.cine-card-stage.is-in{display:grid}
+.cine-card-scale{width:320px;height:450px;transform:scale(0.6) rotateX(5deg);opacity:0;
+  transition:transform 1.2s cubic-bezier(0.22, 0.61, 0.36, 1),opacity 0.6s ease-out}
+.cine-card-stage.zoom-in .cine-card-scale{transform:scale(1.08) rotateX(0deg);opacity:1}
+.cine-card-wrap{width:100%;height:100%;position:relative;transform-style:preserve-3d}
+.cine-card-tilt{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .2s ease-out;will-change:transform}
+.cine-card{position:absolute;inset:0;filter:none}
+.cine-card .card-front{position:absolute;inset:0;border-radius:0;overflow:hidden;
+  box-shadow:none}
+
+/* ---------- GRADE OVERLAY ---------- */
+.grade-overlay{display:none}
+
+/* --- cinematic acties --- */
+.cine-actions{position:absolute;left:50%;top:50%;transform:translateX(-50%) translateY(280px);
+  display:flex;gap:12px;z-index:30;opacity:0;pointer-events:none;
+  transition:opacity .6s ease,transform .6s ease;flex-wrap:wrap;justify-content:center}
+.cine-actions.active{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(280px)}
+
+/* --- card text overlay --- */
+.card-text-overlay{position:absolute;inset:0;z-index:15;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:12px;opacity:0;transition:opacity .8s ease;pointer-events:none}
+.card-text-overlay.active{opacity:1}
+.cto-grade{font-size:clamp(32px,10vw,100px);font-weight:900;line-height:.85;
+  letter-spacing:-.05em;color:var(--accent2,#fff);text-shadow:0 0 40px var(--glow),0 0 80px var(--glow),0 0 120px var(--glow);
+  padding:0}
+.cto-grade .g-int{font-variant-numeric:tabular-nums}
+.cto-grade .g-dec{font-size:.64em;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cto-info{display:flex;flex-direction:column;gap:6px;text-align:center}
+.cto-subject{font-size:clamp(12px,2vw,24px);font-weight:800;letter-spacing:.2em;color:var(--txt,#fff);
+  text-shadow:0 0 30px var(--glow),0 0 60px var(--glow);padding:0}
+.cto-test{font-size:clamp(10px,1.5vw,18px);font-weight:700;letter-spacing:.15em;color:var(--accent,#fff);
+  text-shadow:0 0 20px var(--glow),0 0 40px var(--glow);padding:0}
+
+/* Card text overlay color inheritance from rarity/type */
+.card-text-overlay[data-rarity]{--mat1:var(--mat1,#1a2a3a);--mat2:var(--mat2,#0a1520);--mat3:var(--mat3,#050810);
+  --accent:var(--accent,#7cb2ff);--accent2:var(--accent2,#dcecff);--line:var(--line,rgba(160,200,255,.3));
+  --glow:var(--glow,rgba(90,150,255,.45));--txt:var(--txt,#eff5ff)}
+
+/* ---------- DOCK ---------- */
+.dock{position:relative;z-index:6;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;
+  padding:11px 20px 14px;background:linear-gradient(0deg,rgba(6,10,17,.97),rgba(8,13,22,.72));
+  border-top:1px solid rgba(255,255,255,.07);backdrop-filter:blur(18px)}
+.dock-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.dock-head h3{margin:0;font-size:8.5px;letter-spacing:.26em;font-weight:800;color:#7b90a9}
+.demo{display:flex;align-items:center;gap:7px}
+.demo>span{font-size:7.5px;letter-spacing:.18em;font-weight:800;color:#5f7288}
+.demo select{appearance:none;-webkit-appearance:none;cursor:pointer;
+  background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238ea1b8' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 9px center;
+  border:1px solid rgba(255,255,255,.13);border-radius:6px;color:#cfe2f7;font-size:9px;font-weight:700;
+  letter-spacing:.1em;padding:6px 24px 6px 10px;outline:none}
+.demo select:hover{border-color:rgba(160,205,255,.45)}
+.demo select option{background:#0b1220;color:#cfe2f7}
+.pack-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.pack-tile{position:relative;display:flex;align-items:center;gap:10px;text-align:left;padding:9px 11px;
+  border-radius:9px;cursor:pointer;color:inherit;border:1px solid rgba(255,255,255,.09);
+  background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.012));
+  transition:transform .22s,border-color .22s,box-shadow .22s,background .22s;overflow:hidden}
+
+@media (max-width: 1000px) {
+  .pack-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .pack-tile{gap:8px;padding:8px 10px}
+  .tile-pack{width:22px;height:30px}
+  .tile-name{font-size:8.5px}
+  .tile-desc{font-size:7px}
+}
+.pack-tile:hover{transform:translateY(-2px);border-color:rgba(150,200,255,.42);box-shadow:0 12px 26px -16px rgba(120,180,255,.85)}
+.pack-tile.is-active{border-color:rgba(160,210,255,.8);background:linear-gradient(160deg,rgba(120,180,255,.16),rgba(255,255,255,.02));
+  box-shadow:0 0 0 1px rgba(160,210,255,.35),0 12px 28px -16px rgba(120,180,255,.9)}
+.tile-pack{flex:0 0 auto;width:24px;height:33px;border-radius:3px;position:relative;
+  background:linear-gradient(160deg,var(--tp1,#2a3a52),var(--tp2,#0a1220));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 4px 10px -4px #000;overflow:hidden}
+.tile-pack::after{content:"";position:absolute;inset:0;background:linear-gradient(112deg,transparent 30%,rgba(255,255,255,.7) 46%,transparent 62%);opacity:.5}
+.pack-tile[data-theme="bronze"] .tile-pack{--tp1:#7a5230;--tp2:#1d1208}
+.pack-tile[data-theme="silver"] .tile-pack{--tp1:#a9bed4;--tp2:#131c28}
+.pack-tile[data-theme="gold"] .tile-pack{--tp1:#e8c56a;--tp2:#2a1e06}
+.pack-tile[data-theme="icon"] .tile-pack{--tp1:#fff0b8;--tp2:#1a1204}
+.pack-tile[data-theme="cultuur"] .tile-pack{--tp1:#ff6b9b;--tp2:#4a1a2a}
+.pack-tile[data-theme="mens"] .tile-pack{--tp1:#6bb9ff;--tp2:#2a3a5a}
+.pack-tile[data-theme="natuur"] .tile-pack{--tp1:#6bff8a;--tp2:#1a4a2a}
+.pack-tile[data-theme="talen"] .tile-pack{--tp1:#ffb86b;--tp2:#4a3a1a}
+.pack-tile[data-theme="toetsweek"] .tile-pack{--tp1:#ff6b8a;--tp2:#5a4a1a}
+.pack-tile[data-theme="magenta"] .tile-pack{--tp1:#ff6bff;--tp2:#4a1a4a}
+.tile-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile-name{font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#e5efff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile-desc{font-size:7.5px;letter-spacing:.04em;color:#7b90a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock-right{min-width:0}
+.recent-list{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;min-height:66px}
+.recent-list::-webkit-scrollbar{height:4px}
+.recent-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:4px}
+.recent-empty{font-size:8.5px;letter-spacing:.12em;color:#55677c;font-weight:700;display:flex;align-items:center;height:62px}
+.mini{position:relative;flex:0 0 auto;width:50px;height:68px;border-radius:6px;padding:6px 5px;cursor:pointer;
+  text-align:left;overflow:hidden;border:1px solid var(--line,rgba(255,255,255,.2));
+  background:linear-gradient(160deg,var(--mat1),var(--mat2) 58%,var(--mat3));color:var(--txt);
+  display:flex;flex-direction:column;justify-content:flex-end;gap:1px;transition:transform .2s,box-shadow .2s}
+.mini:hover{transform:translateY(-3px);box-shadow:0 12px 22px -12px var(--glow)}
+.mini-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;z-index:0}
+.mini::before{content:"";position:absolute;inset:0;z-index:1;background:radial-gradient(85% 60% at 50% 0%,var(--glow),transparent 72%);opacity:.55;pointer-events:none}
+.mini-grade{position:relative;z-index:2;font-size:15px;font-weight:900;line-height:1;color:var(--accent2);text-shadow:0 0 10px var(--glow)}
+.mini-subject{position:relative;z-index:2;font-size:5.5px;letter-spacing:.08em;font-weight:800;color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-rar{position:relative;z-index:2;font-size:4.6px;letter-spacing:.12em;font-weight:800;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- OVERLAYS ---------- */
+.overlay{position:fixed;inset:0;z-index:600;display:none;background:rgba(3,6,11,.86);backdrop-filter:blur(12px)}
+.overlay.is-open{display:block;animation:ovFade .25s ease}
+@keyframes ovFade{from{opacity:0}to{opacity:1}}
+.overlay-scroll{position:absolute;inset:0;overflow-y:auto;padding:74px 24px 46px}
+.overlay-scroll::-webkit-scrollbar{width:8px}
+.overlay-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}
+.panel{max-width:1080px;margin:0 auto;position:relative}
+.panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.09)}
+.panel-title{font-size:20px;font-weight:900;letter-spacing:.14em;color:#f0f6ff;text-shadow:0 0 26px rgba(120,180,255,.35)}
+.panel-sub{font-size:8.5px;letter-spacing:.24em;color:#7b90a9;font-weight:700;margin-top:5px}
+.ov-close{appearance:none;cursor:pointer;width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);color:#cfe2f7;font-size:16px;line-height:1;display:grid;place-items:center;transition:background .2s,border-color .2s}
+.ov-close:hover{background:rgba(255,255,255,.12);border-color:rgba(160,205,255,.5)}
+.col-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:14px}
+.col-item{position:relative;aspect-ratio:320/450;border-radius:11px;cursor:pointer;padding:12px;overflow:hidden;
+  text-align:left;color:var(--txt);border:1px solid var(--line,rgba(255,255,255,.2));
+  background:linear-gradient(158deg,var(--mat1),var(--mat2) 52%,var(--mat3));
+  display:flex;flex-direction:column;justify-content:space-between;transition:transform .22s,box-shadow .25s;isolation:isolate}
+.col-item:hover{transform:translateY(-4px);box-shadow:0 20px 34px -20px var(--glow),0 0 0 1px var(--line)}
+.col-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.42;z-index:0}
+.col-item::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:radial-gradient(80% 55% at 50% 0%,var(--glow),transparent 72%);opacity:.55}
+.col-item::after{content:"";position:absolute;inset:0;border-radius:11px;pointer-events:none;z-index:2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.ci-top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center}
+.ci-rar{font-size:6px;letter-spacing:.16em;font-weight:800;color:var(--accent2)}
+.ci-gr{font-size:26px;font-weight:900;line-height:1;color:var(--accent2);text-shadow:0 0 16px var(--glow)}
+.ci-sub{position:relative;z-index:3;font-size:9px;font-weight:800;letter-spacing:.08em;color:var(--txt);text-shadow:0 2px 8px rgba(0,0,0,.8)}
+.ci-title{position:relative;z-index:3;font-size:6.5px;color:rgba(255,255,255,.6);margin-top:3px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.empty-state{text-align:center;padding:70px 20px;color:#55677c;font-size:10px;letter-spacing:.2em;font-weight:700;border:1px dashed rgba(255,255,255,.12);border-radius:14px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:26px}
+.stat-card{border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 18px;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.012))}
+.stat-card .sc-label{font-size:7.5px;letter-spacing:.24em;font-weight:800;color:#7b90a9}
+.stat-card .sc-value{font-size:26px;font-weight:900;color:#eaf3ff;margin-top:6px;text-shadow:0 0 22px rgba(120,180,255,.35)}
+.bar-list{display:flex;flex-direction:column;gap:10px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 42px;align-items:center;gap:12px}
+.bar-name{font-size:8.5px;letter-spacing:.14em;font-weight:800;color:var(--accent2)}
+.bar-track{height:8px;border-radius:5px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--metal2),var(--metal1));box-shadow:0 0 14px -2px var(--glow);transition:width .7s cubic-bezier(.2,.9,.3,1)}
+.bar-count{font-size:10px;font-weight:800;color:#9fb4cc;text-align:right}
+.overlay-detail{z-index:700}
+.detail-wrap{position:absolute;inset:0;overflow-y:auto;display:flex;align-items:center;justify-content:center;gap:54px;padding:70px 32px 50px;flex-wrap:wrap}
+.detail-card{position:relative;width:320px;height:450px;perspective:1500px;flex:0 0 auto}
+.detail-card .card-tilt{position:absolute;inset:0;transform-style:preserve-3d}
+.detail-info{max-width:340px}
+.di-kicker{font-size:8px;letter-spacing:.3em;font-weight:800;color:#7b90a9}
+.di-title{font-size:26px;font-weight:900;letter-spacing:.1em;margin-top:8px;color:#f0f6ff;text-shadow:0 0 28px rgba(120,180,255,.4)}
+.di-sub{font-size:11px;color:#93a8c0;margin-top:8px;line-height:1.5}
+.di-rows{margin-top:22px;display:flex;flex-direction:column;gap:9px}
+.di-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.07)}
+.di-row span{font-size:8px;letter-spacing:.2em;font-weight:800;color:#6d8098}
+.di-row b{font-size:12px;font-weight:800;color:#dbe9fb;letter-spacing:.04em}
+.di-flavor{margin-top:22px;font-size:10px;letter-spacing:.1em;color:#8ea1b8;line-height:1.6;padding:14px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035)}
+.di-actions{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-height:880px){.scene{transform:scale(.9)}}
+@media (max-height:790px){.scene{transform:scale(.8)}}
+@media (max-height:700px){.scene{transform:scale(.68)}}
+@media (max-width:1080px){.dock{grid-template-columns:minmax(0,1fr)}.dock-right{display:none}}
+@media (max-width:760px){
+  .scene{transform:scale(.72)}.nav{display:none}
+  .pack-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .topbar-right .stat:first-child{display:none}
+  .detail-wrap{gap:26px;padding-top:80px}.detail-card{width:260px;height:366px}
+  .w-text{font-size:clamp(18px,6vw,50px)}
+  .w-grade{font-size:clamp(36px,14vw,100px)}
+  .cine-card-scale{transform:scale(.95)}}
+@media (max-width:480px){.scene{transform:scale(.6)}.brand-name{font-size:11px}
+  .cine-card-scale{transform:scale(.8)}}
+@media (prefers-reduced-motion:reduce){
+  .pack-idle{animation:none}.pack-wrap.is-charging .pack{animation-duration:.9s}
+  .pack-foil,.foil,.btn-primary::after{animation:none}
+  .cine-3d.shake{animation:none}}
+</style>
+</head>
+<body>
+
+<div id="bg" aria-hidden="true">
+  <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
+  <div class="beam b4"></div><div class="beam b5"></div><div class="beam b6"></div>
+  <div class="floor"></div><div class="pitch"></div><div class="vignette"></div><div class="grain"></div>
+</div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#8fc4ff"/><stop offset="1" stop-color="#2f6fb8"/>
+        </linearGradient></defs>
+        <path d="M24 3 L44 11 V26 C44 36 35 43 24 46 C13 43 4 36 4 26 V11 Z" fill="none" stroke="url(#bm)" stroke-width="2"/>
+        <path d="M24 12 L28.5 21.5 L39 23 L31.5 30 L33.5 40.5 L24 35.5 L14.5 40.5 L16.5 30 L9 23 L19.5 21.5 Z" fill="url(#bm)" opacity=".92"/>
+      </svg>
+      <div><span class="brand-name">CIJFERKAART</span><span class="brand-sub">ULTIMATE EDITIE</span></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn is-active" data-action="nav" data-view="winkel">Winkel</button>
+      <button class="nav-btn" data-action="nav" data-view="collectie">Mijn collectie</button>
+      <button class="nav-btn" data-action="nav" data-view="overzicht">Overzicht</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="stat"><span class="stat-label">PAKKETTEN GEOPEND</span><span class="stat-value" id="statOpened">0</span></div>
+      <div class="stat"><span class="stat-label">KAARTEN</span><span class="stat-value" id="statCards">0</span></div>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="scene-wrap">
+      <div class="scene" id="scene">
+        <div class="pack-wrap" id="packWrap" data-theme="bronze">
+          <div class="pack-idle">
+            <div class="pack">
+              <div class="pf pf-front">
+                <div class="pack-img" id="mainPackImg"></div>
+              </div>
+              <div class="pf pf-back"></div><div class="pf pf-right"></div><div class="pf pf-left"></div>
+              <div class="pf pf-top"></div><div class="pf pf-bottom"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="stage-ui" id="stageUI"></div>
+  </main>
+
+  <footer class="dock">
+    <div class="dock-left">
+      <div class="dock-head">
+        <h3>KIES EEN PAKKET</h3>
+        <label class="demo"><span>VOORBEELDCIJFER</span>
+          <select id="demoSelect" aria-label="Voorbeeldcijfer kiezen">
+            <option value="">Willekeurig</option>
+            <option value="crisis">CRISIS (1,0 – 3,9)</option>
+            <option value="onvoldoende">ONVOLDOENDE (4,0 – 5,4)</option>
+            <option value="voldoende">VOLDOENDE (5,5 – 6,4)</option>
+            <option value="sterk">STERK (6,5 – 7,9)</option>
+            <option value="elite">ELITE (8,0 – 8,9)</option>
+            <option value="wereldklasse">WERELDKLASSE (9,0 – 9,4)</option>
+            <option value="goat">GOAT / ICOON (9,5 – 10,0)</option>
+          </select>
+        </label>
+      </div>
+      <div class="pack-list" id="packList"></div>
+    </div>
+    <div class="dock-right">
+      <div class="dock-head"><h3>JE LAATSTE PACK OPENING</h3></div>
+      <div class="recent-list" id="recentList"></div>
+    </div>
+  </footer>
+</div>
+
+<!-- ================= CINEMATIC 3D OVERLAY ================= -->
+<div class="cinematic" id="cinematic">
+  <canvas id="warpCanvas"></canvas>
+  <div class="cine-beams">
+    <div class="cine-beam bl"></div><div class="cine-beam br"></div><div class="cine-beam bc"></div>
+  </div>
+
+  <!-- 3D wereld: camera vliegt hier doorheen -->
+  <div class="cine-3d" id="cine3d">
+    <div class="cine-world" id="cineWorld">
+      <div class="w-plane" id="wPlane1" data-depth="-2100">
+        <div class="w-center">
+          <div class="w-gate"></div>
+          <div class="w-inner" id="wInner1">
+            <div class="w-label">ZELDZAAMHEID</div>
+            <div class="w-text" id="wText1"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-plane" id="wPlane2" data-depth="-3600">
+        <div class="w-center">
+          <div class="w-gate"></div>
+          <div class="w-inner" id="wInner2">
+            <div class="w-label">VAK</div>
+            <div class="w-text" id="wText2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-plane" id="wPlane3" data-depth="-5100">
+        <div class="w-center">
+          <div class="w-gate"></div>
+          <div class="w-inner" id="wInner3">
+            <div class="w-label">TOETS</div>
+            <div class="w-text" id="wText3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-plane" id="wPlane4" data-depth="-6300">
+        <div class="w-center">
+          <div class="w-gate"></div>
+          <div class="w-inner" id="wInner4">
+            <div class="w-label">CIJFER</div>
+            <div class="w-text" id="wText4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- pakket -->
+  <div class="pack-wrap cine-pack-stage" id="cinePackStage" data-theme="bronze">
+    <div class="pack-idle">
+      <div class="pack">
+        <div class="pf pf-front">
+          <div class="pack-img" id="cinePackImg"></div>
+        </div>
+        <div class="pf pf-back"></div><div class="pf pf-right"></div><div class="pf pf-left"></div>
+        <div class="pf pf-top"></div><div class="pf pf-bottom"></div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="cineFX"></canvas>
+
+  <!-- eindkaart -->
+  <div class="cine-card-stage" id="cineCardStage">
+    <div class="cine-card-scale">
+      <div class="cine-card-wrap" id="cineCardWrap">
+        <div class="cine-card-tilt" id="cineCardTilt">
+          <div class="cine-card" id="cineCard"></div>
+          <div class="card-text-overlay" id="cardTextOverlay">
+            <div class="cto-grade" id="ctoGrade"></div>
+            <div class="cto-info">
+              <div class="cto-subject" id="ctoSubject"></div>
+              <div class="cto-test" id="ctoTest"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cine-vignette" id="cineVignette"></div>
+  <div class="cine-scanlines"></div>
+  <div class="cine-actions" id="cineActions">
+    <button class="btn-primary" data-action="cine-reopen">OPNIEUW OPENEN</button>
+    <button class="btn-ghost" data-action="cine-detail">BEKIJK KAART</button>
+    <button class="btn-ghost" data-action="cine-collection">ALLE KAARTEN</button>
+    <button class="btn-ghost" data-action="cine-close">TERUG NAAR WINKEL</button>
+  </div>
+</div>
+
+<!-- ================= COLLECTIE / OVERZICHT ================= -->
+<div class="overlay" id="overlay">
+  <div class="overlay-scroll"><div class="panel" id="overlayPanel"></div></div>
+</div>
+
+<!-- ================= DETAIL ================= -->
+<div class="overlay overlay-detail" id="detailOverlay">
+  <div class="detail-wrap">
+    <button class="ov-close" data-action="close-detail" aria-label="Sluiten" style="position:absolute;top:18px;right:22px;z-index:10">✕</button>
+    <div class="detail-card" id="detailCard"></div>
+    <div class="detail-info" id="detailInfo"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ======================= HULPFUNCTIES ======================= */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fmtGrade=n=>n.toFixed(1).replace(".",",");
+const REDUCED=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function hexToRgb(hex){const m=hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  return m?`${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)}`:"255,255,255";}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+
+/* ======================= AFBEELDINGEN (LOCAL ASSETS) ======================= */
+const IMG_LIB={
+  cultuur:"./assets/card_cultuur_same.png",
+  mens:"./assets/card_mens_same.png",
+  natuur:"./assets/card_natuur_abstract_final.png",
+  talen:"./assets/card_talen_same.png",
+  toetsweek:"./assets/card_toetsweek_same.png"
+};
+const IMG_KEYS=Object.keys(IMG_LIB);
+const PACK_IMG={
+  cultuur:"./assets/pack_final_cultuur.png",
+  mens:"./assets/pack_final_mens.png",
+  natuur:"./assets/pack_final_natuur.png",
+  talen:"./assets/pack_final_talen.png",
+  toetsweek:"./assets/pack_final_toetsweek.png",
+  magenta:"./assets/magenta_purple_pack_final.png"
+};
+IMG_KEYS.forEach(k=>{const i=new Image();i.src=IMG_LIB[k];});
+Object.values(PACK_IMG).forEach(u=>{const i=new Image();i.src=u;});
+
+/* ======================= ZELDZAAMHEDEN ======================= */
+const RARITIES={
+  crisis:{id:"crisis",label:"CRISIS",min:1,max:3.9,power:1,flavor:"Zwaar. Deze moet je echt even bespreken met je docent.",colors:["#ff4d3d","#ff8a5c","#b02218","#ffd0c0"],ray:"rgba(255,70,55,.45)",shock:"rgba(255,80,60,.85)"},
+  onvoldoende:{id:"onvoldoende",label:"ONVOLDOENDE",min:4,max:5.4,power:2,flavor:"Nog niet helemaal daar — volgende keer beter.",colors:["#e8a35c","#c07a3a","#8a5426","#ffe0b8"],ray:"rgba(230,160,90,.42)",shock:"rgba(230,160,90,.8)"},
+  voldoende:{id:"voldoende",label:"VOLDOENDE",min:5.5,max:6.4,power:3,flavor:"Netjes op orde. Solide basis.",colors:["#a9c4dd","#7d97b0","#cfe3f5","#e9f3ff"],ray:"rgba(150,195,240,.4)",shock:"rgba(160,200,240,.85)"},
+  sterk:{id:"sterk",label:"STERK",min:6.5,max:7.9,power:4,flavor:"Sterk werk, een mooi cijfer.",colors:["#8fc0ff","#5f8fd6","#d7e9ff","#ffffff"],ray:"rgba(110,165,255,.45)",shock:"rgba(120,175,255,.9)"},
+  elite:{id:"elite",label:"ELITE",min:8,max:8.9,power:5,flavor:"IJzersterk — bijna perfect.",colors:["#b48cff","#8ce8ff","#e8dcff","#ffffff"],ray:"rgba(170,140,255,.5)",shock:"rgba(180,150,255,.9)"},
+  wereldklasse:{id:"wereldklasse",label:"WERELDKLASSE",min:9,max:9.4,power:6,flavor:"Wereldklasse! Dit is topniveau.",colors:["#ffd166","#ffe9a8","#e0a83a","#fff6d8"],ray:"rgba(255,210,110,.55)",shock:"rgba(255,215,120,.95)"},
+  goat:{id:"goat",label:"GOAT / ICOON",min:9.5,max:10,power:7,flavor:"JE HEBT EEN GOAT GEPAKT!",colors:["#ffe08a","#fff8dc","#ffc44d","#b9f6ff","#ffb8f0","#ffffff"],ray:"rgba(255,225,140,.6)",shock:"rgba(255,235,160,1)"}
+};
+const RARITY_ORDER=["crisis","onvoldoende","voldoende","sterk","elite","wereldklasse","goat"];
+function rarityForGrade(g){for(const id of RARITY_ORDER){const r=RARITIES[id];if(g<=r.max+1e-6)return r;}return RARITIES.goat;}
+
+/* ======================= KAARTDATA ======================= */
+const CARDS=[
+ {subject:"CULTUUR",title:"Toets: Kunstgeschiedenis",grade:3.2,weging:2,periode:"1",type:"cultuur"},
+ {subject:"CULTUUR",title:"Proefwerk: De Industriële Revolutie",grade:2.7,weging:3,periode:"3",type:"cultuur"},
+ {subject:"CULTUUR",title:"SO: Klimaten",grade:3.8,weging:1,periode:"2",type:"cultuur"},
+ {subject:"CULTUUR",title:"Woordjestoets Unité 4",grade:4.1,weging:1,periode:"2",type:"cultuur"},
+ {subject:"CULTUUR",title:"Toets: Reacties",grade:4.7,weging:2,periode:"3",type:"cultuur"},
+ {subject:"CULTUUR",title:"Hoofdstuktoets Geluid",grade:5.1,weging:3,periode:"1",type:"cultuur"},
+ {subject:"CULTUUR",title:"Boekverslag: De Aanslag",grade:5.4,weging:2,periode:"3",type:"cultuur"},
+ {subject:"CULTUUR",title:"Leesvaardigheid A2",grade:5.8,weging:2,periode:"1",type:"cultuur"},
+ {subject:"MENS",title:"Hoofdstuk 3: Markten",grade:6.1,weging:3,periode:"2",type:"mens"},
+ {subject:"MENS",title:"Paragraaf 5.3: Statistiek",grade:6.4,weging:1,periode:"3",type:"mens"},
+ {subject:"MENS",title:"Thema 3: Erfelijkheid",grade:6.9,weging:3,periode:"2",type:"mens"},
+ {subject:"MENS",title:"Spelling & Grammatica",grade:7.4,weging:2,periode:"1",type:"mens"},
+ {subject:"MENS",title:"Hoofdstuk 5: Water",grade:7.8,weging:3,periode:"3",type:"mens"},
+ {subject:"MENS",title:"Luistertoets B1",grade:7.1,weging:1,periode:"2",type:"mens"},
+ {subject:"NATUUR",title:"Atoomstructuur",grade:8.7,weging:3,periode:"2",type:"natuur"},
+ {subject:"NATUUR",title:"Werkstuk: De Koude Oorlog",grade:8.2,weging:2,periode:"3",type:"natuur"},
+ {subject:"NATUUR",title:"Practicum: Elektriciteit",grade:8.9,weging:2,periode:"1",type:"natuur"},
+ {subject:"NATUUR",title:"Reading & Vocabulary",grade:9.1,weging:2,periode:"2",type:"natuur"},
+ {subject:"NATUUR",title:"Hoofdstuk 1: Geluid",grade:9.3,weging:3,periode:"3",type:"natuur"},
+ {subject:"NATUUR",title:"Presentatie: Ondernemerschap",grade:9.0,weging:1,periode:"1",type:"natuur"},
+ {subject:"TALEN",title:"Thema 2: Cellen en Weefsels",grade:9.6,weging:3,periode:"2",type:"talen"},
+ {subject:"TALEN",title:"Hoofdstuk 4: Formules & Grafieken",grade:9.8,weging:3,periode:"2",type:"talen"},
+ {subject:"TALEN",title:"Eindtoets Literatuur",grade:10.0,weging:2,periode:"3",type:"talen"},
+ {subject:"TOETSWEEK",title:"Toets: Vergelijkingen",grade:3.2,weging:2,periode:"1",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Proefwerk: De Industriële Revolutie",grade:2.7,weging:3,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"SO: Klimaten",grade:3.8,weging:1,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Woordjestoets Unité 4",grade:4.1,weging:1,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Toets: Reacties",grade:4.7,weging:2,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Hoofdstuktoets Geluid",grade:5.1,weging:3,periode:"1",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Boekverslag: De Aanslag",grade:5.4,weging:2,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Leesvaardigheid A2",grade:5.8,weging:2,periode:"1",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Hoofdstuk 3: Markten",grade:6.1,weging:3,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Paragraaf 5.3: Statistiek",grade:6.4,weging:1,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Thema 3: Erfelijkheid",grade:6.9,weging:3,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Spelling & Grammatica",grade:7.4,weging:2,periode:"1",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Hoofdstuk 5: Water",grade:7.8,weging:3,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Luistertoets B1",grade:7.1,weging:1,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Atoomstructuur",grade:8.7,weging:3,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Werkstuk: De Koude Oorlog",grade:8.2,weging:2,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Practicum: Elektriciteit",grade:8.9,weging:2,periode:"1",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Reading & Vocabulary",grade:9.1,weging:2,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Hoofdstuk 1: Geluid",grade:9.3,weging:3,periode:"3",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Presentatie: Ondernemerschap",grade:9.0,weging:1,periode:"1",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Thema 2: Cellen en Weefsels",grade:9.6,weging:3,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Hoofdstuk 4: Formules & Grafieken",grade:9.8,weging:3,periode:"2",type:"toetsweek"},
+ {subject:"TOETSWEEK",title:"Eindtoets Literatuur",grade:10.0,weging:2,periode:"3",type:"toetsweek"}
+];
+/* ======================= PACK TYPES (BASED ON ASSETS) ======================= */
+const PACKS=[
+ {id:"cultuur",name:"CULTUUR PAKKET",tag:"CREATIEF",desc:"Kans op unieke cultuur kaarten",theme:"cultuur"},
+ {id:"mens",name:"MENS PAKKET",tag:"MAATSCHAPPIJ",desc:"Kans op sterke sociale kaarten",theme:"mens"},
+ {id:"natuur",name:"NATUUR PAKKET",tag:"BIOLOGIE",desc:"Kans op biologische kaarten",theme:"natuur"},
+ {id:"talen",name:"TALEN PAKKET",tag:"TALEN",desc:"Kans op taalkundige kaarten",theme:"talen"},
+ {id:"toetsweek",name:"TOETSWEEK PAKKET",tag:"EXAMEN",desc:"Kans op examen kaarten",theme:"toetsweek"},
+ {id:"magenta",name:"MAGENTA PAKKET",tag:"LEGENDARISCH",desc:"Gegarandeerd top kaarten",theme:"magenta"}
+];
+
+/* ======================= STATE ======================= */
+const state={opened:0,collection:[],byId:new Map(),selectedPack:"cultuur",forcedRarity:"",
+  busy:false,lastCardKey:null,lastVariant:{},currentItem:null,nextId:1};
+
+/* ======================= DOM REFS ======================= */
+const cinematic=$("#cinematic"),cine3d=$("#cine3d"),cineWorld=$("#cineWorld"),
+  cinePackStage=$("#cinePackStage"),cineCardStage=$("#cineCardStage"),
+  cineCard=$("#cineCard"),cineCardWrap=$("#cineCardWrap"),cineCardTilt=$("#cineCardTilt"),
+  cineActions=$("#cineActions"),
+  stageUI=$("#stageUI"),overlay=$("#overlay"),overlayPanel=$("#overlayPanel"),
+  detailOverlay=$("#detailOverlay"),detailCard=$("#detailCard"),detailInfo=$("#detailInfo");
+
+/* ======================= FX ENGINE (factory) ======================= */
+function createFXEngine(canvasEl){
+  const ctx=canvasEl.getContext("2d");
+  let W=0,H=0,raf=null,last=0;const parts=[];const MAX=REDUCED?220:780;
+  function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth;H=window.innerHeight;
+    canvasEl.width=Math.floor(W*dpr);canvasEl.height=Math.floor(H*dpr);
+    canvasEl.style.width=W+"px";canvasEl.style.height=H+"px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);}
+  window.addEventListener("resize",resize);resize();
+  function push(p){if(parts.length>MAX)parts.splice(0,parts.length-MAX);parts.push(p);start();}
+  function start(){if(raf)return;last=performance.now();raf=requestAnimationFrame(loop);}
+  function loop(t){const dt=Math.min(40,t-last)/16.667;last=t;ctx.clearRect(0,0,W,H);
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];update(p,dt);
+      if(p.dead){parts.splice(i,1);continue;}draw(p);}
+    if(parts.length)raf=requestAnimationFrame(loop);else{raf=null;ctx.clearRect(0,0,W,H);}}
+  function update(p,dt){p.life+=dt;if(p.life>=p.max){p.dead=true;return;}
+    if(p.type==="gather"){const k=Math.min(1,p.life/p.max);const e=k*k;
+      p.x=p.x0+(p.tx-p.x0)*e+Math.sin(k*Math.PI*3)*p.swirl*(1-k);
+      p.y=p.y0+(p.ty-p.y0)*e+Math.cos(k*Math.PI*3)*p.swirl*(1-k);
+      p.alpha=Math.min(1,k*2.4)*(1-k*.35);return;}
+    p.vy+=p.g*dt;p.vx*=Math.pow(p.drag,dt);p.vy*=Math.pow(p.drag,dt);
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;
+    const k=p.life/p.max;p.alpha=k<.72?1:(1-(k-.72)/.28);}
+  function draw(p){const a=Math.max(0,p.alpha);if(a<=0)return;
+    if(p.type==="confetti"){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+      ctx.globalAlpha=a;ctx.fillStyle=p.color;
+      const sq=Math.abs(Math.cos(p.rot*1.7));const hh=p.h*(.22+.78*sq);
+      ctx.fillRect(-p.w/2,-hh/2,p.w,hh);ctx.restore();return;}
+    ctx.globalCompositeOperation="lighter";ctx.fillStyle=p.color;
+    ctx.globalAlpha=a*.92;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,6.28318);ctx.fill();
+    ctx.globalAlpha=a*.2;ctx.beginPath();ctx.arc(p.x,p.y,p.size*2.7,0,6.28318);ctx.fill();
+    ctx.globalCompositeOperation="source-over";}
+  function burstSparks(x,y,count,colors,power){const n=Math.round(count*(REDUCED?.25:0.6));
+    for(let i=0;i<n;i++){const ang=Math.random()*Math.PI*2;const sp=rand(3,13)*power;
+      push({type:"spark",x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp-rand(.5,3),
+        g:.12,drag:.97,life:0,max:rand(38,85),size:rand(1.4,3.8),color:pick(colors),alpha:1});}}
+  function burstConfetti(x,y,count,colors,power){const n=Math.round(count*(REDUCED?.2:0.5));
+    for(let i=0;i<n;i++){const ang=rand(-Math.PI,0);const sp=rand(6,19)*power;
+      push({type:"confetti",x:x+rand(-45,45),y:y+rand(-25,25),
+        vx:Math.cos(ang)*sp*.9,vy:Math.sin(ang)*sp-rand(1,7),
+        g:.35,drag:.986,life:0,max:rand(90,180),w:rand(4,10),h:rand(7,19),
+        rot:Math.random()*6.28,vr:rand(-.35,.35),color:pick(colors),alpha:1});}}
+  function rain(x,y,count,colors){const n=Math.round(count*(REDUCED?.2:0.5));
+    for(let i=0;i<n;i++){push({type:"confetti",x:x+rand(-280,280),y:y-rand(130,400),
+      vx:rand(-1.8,1.8),vy:rand(1.7,5.5),g:.07,drag:.996,life:0,max:rand(120,220),
+      w:rand(3,8),h:rand(6,15),rot:Math.random()*6.28,vr:rand(-.28,.28),color:pick(colors),alpha:1});}}
+  function gather(x,y,ms){const n=REDUCED?32:96;
+    for(let i=0;i<n;i++){const ang=Math.random()*Math.PI*2;const r=rand(180,480);
+      push({type:"gather",x0:x+Math.cos(ang)*r,y0:y+Math.sin(ang)*r,x:x,y:y,tx:x,ty:y,
+        swirl:rand(-45,45),life:rand(0,ms*.32)/16.667,max:(ms/16.667)*rand(.72,1),
+        size:rand(1.2,3),color:"#bfe0ff",alpha:0});}}
+  function clear(){parts.length=0;ctx.clearRect(0,0,W,H);}
+  return{burstSparks,burstConfetti,rain,gather,clear,resize};
+}
+const CineFX=createFXEngine($("#cineFX"));
+
+/* ======================= 3D CAMERA + WARP TUNNEL ======================= */
+let camFwd=0;
+function setCamera(fwd,roll){
+  camFwd=fwd;
+  cineWorld.style.transform=`translateZ(${fwd}px) rotateZ(${roll||0}deg)`;
+}
+function flyTo(targetFwd,dur,opts={}){
+  return new Promise(res=>{
+    const startFwd=camFwd,start=performance.now();
+    Warp.setVelTarget(opts.vel||35);
+    function frame(now){
+      const t=Math.min(1,(now-start)/dur);
+      const e=easeInOutCubic(t);
+      const fwd=startFwd+(targetFwd-startFwd)*e;
+      const roll=0;
+      setCamera(fwd,roll);
+      if(t<1)requestAnimationFrame(frame);
+      else{setCamera(targetFwd,0);Warp.setVelTarget(opts.endVel??2);res();}
+    }
+    requestAnimationFrame(frame);
+  });
+}
+function drift(amount,dur){return flyTo(camFwd+amount,dur,{vel:5,roll:0,endVel:2});}
+
+const Warp=(()=>{
+  const canvas=$("#warpCanvas"),ctx=canvas.getContext("2d");
+  let W=0,H=0,raf=null,running=false;
+  let accent="120,180,255",vel=0,velTarget=6;
+  const stars=[];const COUNT=REDUCED?80:180;const JOURNEY=7000;
+  function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth;H=window.innerHeight;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    canvas.style.width=W+"px";canvas.style.height=H+"px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);}
+  window.addEventListener("resize",()=>{if(running)resize();});
+  function seed(){stars.length=0;
+    for(let i=0;i<COUNT;i++){const ang=Math.random()*Math.PI*2;const r=rand(140,1900);
+      stars.push({x:Math.cos(ang)*r,y:Math.sin(ang)*r,z:-rand(-400,JOURNEY)});}}
+  function setAccent(rgb){accent=rgb;}
+  function setVelTarget(v){velTarget=v;}
+  function frame(){
+    if(!running)return;
+    const cx=W/2,cy=H/2,fov=520;
+    ctx.clearRect(0,0,W,H);
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*.6);
+    g.addColorStop(0,`rgba(${accent},0.06)`);g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    vel+=(velTarget-vel)*.06;
+    const streak=vel*3+4;
+    ctx.lineCap="round";
+    for(const s of stars){
+      let relZ=s.z+camFwd;let depth=-relZ;
+      if(depth<40){s.z-=JOURNEY;relZ=s.z+camFwd;depth=-relZ;}
+      if(depth>5200)continue;
+      const s1=fov/depth,s2=fov/(depth+streak);
+      const x1=cx+s.x*s1,y1=cy+s.y*s1;
+      const x2=cx+s.x*s2,y2=cy+s.y*s2;
+      const a=Math.max(0,Math.min(1,1-depth/4500));
+      ctx.strokeStyle=`rgba(${accent},${(a*.85).toFixed(3)})`;
+      ctx.lineWidth=Math.max(.5,Math.min(3,s1*1.4));
+      ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x1,y1);ctx.stroke();
+    }
+    raf=requestAnimationFrame(frame);}
+  function start(){if(running)return;running=true;resize();seed();raf=requestAnimationFrame(frame);}
+  function stop(){running=false;if(raf)cancelAnimationFrame(raf);raf=null;}
+  return{start,stop,setAccent,setVelTarget};
+})();
+
+/* ======================= ORNAMENTEN ======================= */
+function ornSVG(rarityId,variant){
+  const S='fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"';
+  let s="";
+  if(variant===1){
+    s+=`<path ${S} d="M26 74 L26 26 L74 26" opacity=".85"/><path ${S} d="M294 74 L294 26 L246 26" opacity=".85"/>
+        <path ${S} d="M26 376 L26 424 L74 424" opacity=".85"/><path ${S} d="M294 376 L294 424 L246 424" opacity=".85"/>`;
+  }else{
+    s+=`<rect x="23" y="23" width="274" height="404" rx="10" ${S} opacity=".5"/>
+        <rect x="39" y="39" width="242" height="372" rx="8" ${S} opacity=".26"/>`;
+  }
+  if(rarityId==="goat"){s+=`<path ${S} d="M160 216 L160 34" opacity=".34"/><path ${S} d="M110 46 L160 26 L210 46" opacity=".55"/>`;}
+  if(rarityId==="wereldklasse"){s+=`<path ${S} d="M160 216 L160 40" opacity=".3"/><path ${S} d="M160 216 L74 60" opacity=".24"/><path ${S} d="M160 216 L246 60" opacity=".24"/>`;}
+  if(rarityId==="elite"){s+=`<path ${S} d="M160 40 L184 54 L184 82 L160 96 L136 82 L136 54 Z" opacity=".4"/>`;}
+  if(rarityId==="sterk"){s+=`<path ${S} d="M26 190 L52 216 L26 242" opacity=".55"/><path ${S} d="M294 190 L268 216 L294 242" opacity=".55"/>`;}
+  if(rarityId==="crisis"){s+=`<path ${S} d="M74 26 L92 64 L76 92 L98 126" opacity=".55"/>`;}
+  return `<svg class="orn" viewBox="0 0 320 450" aria-hidden="true">${s}</svg>`;
+}
+
+/* ======================= KAART HTML ======================= */
+function cardFrontHTML(entry,rarityId,variant,imgUrl){
+  const r=RARITIES[rarityId];const url=imgUrl||IMG_LIB[entry.type]||IMG_LIB[pick(IMG_KEYS)];
+  return `<div class="card-face card-front" data-rarity="${rarityId}" data-variant="${variant}" data-type="${entry.type}">
+    <div class="card-image"><img src="${url}" alt="" loading="lazy" onerror="this.style.opacity='0'"></div>
+  </div>`;
+}
+function setGrade(el,value){if(!el)return;const s=fmtGrade(value);const p=s.split(",");
+  el.innerHTML=`<span class="g-int">${p[0]}</span><span class="g-dec">,${p[1]}</span>`;}
+function countGrade(el,from,to,duration){return new Promise(res=>{
+  const t0=performance.now();
+  function step(t){const p=Math.min(1,(t-t0)/duration);
+    const e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+    const v=from+(to-from)*e;const s=fmtGrade(Math.round(v*10)/10).split(",");
+    el.innerHTML=`<span class="g-int">${s[0]}</span><span class="g-dec">,${s[1]}</span>`;
+    if(p<1)requestAnimationFrame(step);else{setGrade(el,to);res();}}
+  requestAnimationFrame(step);});}
+
+/* ======================= KAARTTREKKING ======================= */
+const keyOf=c=>c.subject+"|"+c.title;
+function drawCard(){let pool=CARDS;
+  if(state.forcedRarity){const f=CARDS.filter(c=>rarityForGrade(c.grade).id===state.forcedRarity);if(f.length)pool=f;}
+  else{if(state.selectedPack==="magenta"){const f=CARDS.filter(c=>c.grade>=9);if(f.length)pool=f;}
+    else if(state.selectedPack==="cultuur"){const f=CARDS.filter(c=>c.type==="cultuur");if(f.length)pool=f;}
+    else if(state.selectedPack==="mens"){const f=CARDS.filter(c=>c.type==="mens");if(f.length)pool=f;}
+    else if(state.selectedPack==="natuur"){const f=CARDS.filter(c=>c.type==="natuur");if(f.length)pool=f;}
+    else if(state.selectedPack==="talen"){const f=CARDS.filter(c=>c.type==="talen");if(f.length)pool=f;}
+    else if(state.selectedPack==="toetsweek"){const f=CARDS.filter(c=>c.type==="toetsweek");if(f.length)pool=f;}}
+  let ch=pool.filter(c=>keyOf(c)!==state.lastCardKey);if(!ch.length)ch=pool;return pick(ch);}
+function pickVariant(rid){const l=state.lastVariant[rid];return l===1?2:l===2?1:(Math.random()<.5?1:2);}
+function pickImage(type){return IMG_LIB[type]||IMG_LIB[pick(IMG_KEYS)];}
+
+/* ======================= UI RENDERERS ======================= */
+function renderPackTiles(){$("#packList").innerHTML=PACKS.map(p=>`
+  <button class="pack-tile ${p.id===state.selectedPack?"is-active":""}" data-action="select-pack"
+    data-pack="${p.id}" data-theme="${p.theme}" aria-pressed="${p.id===state.selectedPack}">
+    <span class="tile-pack" aria-hidden="true"></span>
+    <span class="tile-text"><span class="tile-name">${p.name}</span><span class="tile-desc">${p.desc}</span></span>
+  </button>`).join("");}
+function miniHTML(item){const r=RARITIES[item.rarityId];return `
+  <button class="mini" data-rarity="${item.rarityId}" data-action="view-item" data-id="${item.id}"
+    title="${item.entry.subject} — ${fmtGrade(item.entry.grade)} (${r.label})">
+    <img class="mini-img" src="${item.img}" alt="" loading="lazy" onerror="this.style.display='none'">
+    <span class="mini-grade">${fmtGrade(item.entry.grade)}</span>
+    <span class="mini-subject">${item.entry.subject}</span>
+    <span class="mini-rar">${r.label}</span></button>`;}
+function renderRecent(){const l=$("#recentList");
+  if(!state.collection.length){l.innerHTML='<div class="recent-empty">Nog geen kaarten geopend.</div>';return;}
+  l.innerHTML=state.collection.slice(-6).reverse().map(miniHTML).join("");}
+function renderStats(){$("#statOpened").textContent=String(state.opened);$("#statCards").textContent=String(state.collection.length);}
+function setUI(mode,ctx={}){
+  if(mode==="idle"){const p=PACKS.find(x=>x.id===state.selectedPack)||PACKS[0];
+    stageUI.innerHTML=`<div class="ui-kicker">GESELECTEERD PAKKET</div>
+      <div class="ui-title">${p.name}</div>
+      <button class="btn-primary" data-action="open">OPEN PAKKET</button>
+      <div class="ui-hint">Klik om het pakket cinematisch te openen</div>`;}
+  else if(mode==="result"){stageUI.innerHTML=`<div class="ui-kicker">${ctx.rarityLabel}</div>
+      <div class="ui-title">${ctx.subject} · ${ctx.grade}</div>
+      <div class="btn-row"><button class="btn-primary" data-action="open">OPNIEUW OPENEN</button>
+      <button class="btn-ghost" data-action="detail">BEKIJK KAART</button>
+      <button class="btn-ghost" data-action="collection">ALLE KAARTEN</button></div>
+      <div class="ui-hint">${ctx.flavor}</div>`;}}
+
+/* ======================= TILT ======================= */
+function bindTilt(container,tiltEl){
+  container.addEventListener("pointermove",e=>{
+    const r=container.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;
+    tiltEl.style.transform=`rotateX(${(-(py-.5)*20).toFixed(2)}deg) rotateY(${((px-.5)*26).toFixed(2)}deg)`;
+    const front=tiltEl.querySelector(".card-front");
+    if(front){front.style.setProperty("--mx",(px*100).toFixed(1)+"%");front.style.setProperty("--my",(py*100).toFixed(1)+"%");}});
+  container.addEventListener("pointerleave",()=>{tiltEl.style.transform="";});}
+
+/* ======================= CINEMATIC HULPFUNCTIES ======================= */
+function cineShockwave(count,color){for(let i=0;i<count;i++){setTimeout(()=>{
+  const el=document.createElement("div");el.className="cine-shock";
+  el.style.borderColor=color;el.style.boxShadow=`0 0 60px ${color}, inset 0 0 60px ${color}`;
+  cinematic.appendChild(el);el.addEventListener("animationend",()=>el.remove());},i*150);}}
+function shake3d(){cine3d.classList.remove("shake");void cine3d.offsetWidth;cine3d.classList.add("shake");}
+
+/* Wave animation helpers */
+function waveEntrance(planeEl, innerEl, duration=1000){
+  return new Promise(res=>{
+    planeEl.classList.remove("animate-out");
+    innerEl.classList.remove("animate-out");
+    void planeEl.offsetWidth;
+    planeEl.classList.add("animate-in");
+    innerEl.classList.add("animate-in");
+    setTimeout(res, duration);
+  });
+}
+
+function waveExit(planeEl, innerEl, duration=800){
+  return new Promise(res=>{
+    planeEl.classList.remove("animate-in");
+    innerEl.classList.remove("animate-in");
+    void planeEl.offsetWidth;
+    planeEl.classList.add("animate-out");
+    innerEl.classList.add("animate-out");
+    setTimeout(res, duration);
+  });
+}
+
+function enterCinematic(pack){
+  cinematic.classList.add("active");
+  ["#wPlane1","#wPlane2","#wPlane3","#wPlane4"].forEach(s=>{const p=$(s);
+    p.classList.remove("lit","animate-in","animate-out");const inner=p.querySelector(".w-inner");
+    inner.classList.remove("animate-in","animate-out","arrive");});
+  cineCardStage.classList.remove("is-in","zoom-in");cineActions.classList.remove("active");
+  $("#cardTextOverlay").classList.remove("active");
+  $("#cardTextOverlay").style.removeProperty("--mat1");
+  $("#cardTextOverlay").style.removeProperty("--mat2");
+  $("#cardTextOverlay").style.removeProperty("--mat3");
+  $("#cardTextOverlay").style.removeProperty("--accent");
+  $("#cardTextOverlay").style.removeProperty("--accent2");
+  $("#cardTextOverlay").style.removeProperty("--line");
+  $("#cardTextOverlay").style.removeProperty("--glow");
+  $("#cardTextOverlay").style.removeProperty("--txt");
+  cine3d.style.opacity="";
+  $("#cineCard").innerHTML="";
+  const ps=cinePackStage;ps.className="pack-wrap cine-pack-stage";
+  ps.setAttribute("data-theme",pack.theme);
+  $("#cinePackImg").innerHTML=`<img src="${PACK_IMG[pack.theme]}" alt="" onerror="this.style.display='none'">`;
+  setCamera(0,0);}
+
+function exitCinematic(showResult){
+  cinematic.classList.remove("active");
+  CineFX.clear();
+  cinePackStage.className="pack-wrap cine-pack-stage";
+  ["#wPlane1","#wPlane2","#wPlane3","#wPlane4"].forEach(s=>{const p=$(s);
+    p.classList.remove("lit","animate-in","animate-out");const inner=p.querySelector(".w-inner");
+    inner.classList.remove("animate-in","animate-out","arrive");});
+  cineCardStage.classList.remove("is-in","zoom-in");cineActions.classList.remove("active");
+  $("#cardTextOverlay").classList.remove("active");
+  $("#cardTextOverlay").style.removeProperty("--mat1");
+  $("#cardTextOverlay").style.removeProperty("--mat2");
+  $("#cardTextOverlay").style.removeProperty("--mat3");
+  $("#cardTextOverlay").style.removeProperty("--accent");
+  $("#cardTextOverlay").style.removeProperty("--accent2");
+  $("#cardTextOverlay").style.removeProperty("--line");
+  $("#cardTextOverlay").style.removeProperty("--glow");
+  $("#cardTextOverlay").style.removeProperty("--txt");
+  $("#cineVignette").classList.remove("intense");
+  cine3d.style.opacity="";$("#cineCard").innerHTML="";
+  if(showResult&&state.currentItem)showResultOnMainStage(state.currentItem);
+  else resetMainStage();}
+
+function resetMainStage(){
+  $("#packWrap").classList.remove("is-hidden","is-burst","is-charging","intense");
+  setUI("idle");}
+function showResultOnMainStage(item){const r=RARITIES[item.rarityId];const e=item.entry;
+  setUI("result",{rarityLabel:r.label,subject:e.subject,grade:fmtGrade(e.grade),flavor:r.flavor});}
+
+/* ======================= CINEMATIC FASES ======================= */
+async function packPhase(pack){
+  const ps=cinePackStage;
+  ps.classList.add("active");
+  await wait(600);
+  ps.classList.add("is-charging");
+  $("#cineVignette").classList.add("intense");
+  await wait(1200);
+  ps.classList.add("intense");
+  await wait(500);
+  ps.classList.add("is-burst");
+  await wait(200);
+  $("#cineVignette").classList.remove("intense");
+  ps.classList.remove("active","is-charging","intense","is-burst");}
+
+/* ---------- DYNAMIC FONT SIZING ---------- */
+function adjustTextSize(element, maxLength, baseSize, minSize, maxSize){
+  const text=element.textContent||element.innerText||"";
+  const len=text.length;
+  const vw=window.innerWidth/100;
+  const vh=window.innerHeight/100;
+  const sizeFactor=Math.min(len/maxLength,1);
+  const calcSize=baseSize-(baseSize-minSize)*sizeFactor;
+  const finalSize=Math.max(minSize,Math.min(maxSize,calcSize));
+  element.style.fontSize=finalSize+"px";}
+
+async function wave1(entry,rarity){
+  const plane=$("#wPlane1"),inner=$("#wInner1");
+  $("#wText1").textContent=rarity.label;
+  adjustTextSize($("#wText1"),20,45,18,60);
+  plane.style.setProperty("--wave-color",rarity.colors[0]);
+  plane.style.setProperty("--wave-glow",rarity.ray);
+  plane.classList.add("lit");
+  await waveEntrance(plane, inner, 1000);
+  await wait(1000);
+  const exitPromise=waveExit(plane, inner, 800);
+  await wait(300);
+  plane.classList.remove("lit");
+  await exitPromise;
+  await wait(50);}
+
+async function wave2(entry,rarity){
+  const plane=$("#wPlane2"),inner=$("#wInner2");
+  $("#wText2").textContent=entry.subject;
+  adjustTextSize($("#wText2"),15,45,18,60);
+  plane.style.setProperty("--wave-color",rarity.colors[0]);
+  plane.style.setProperty("--wave-glow",rarity.ray);
+  plane.classList.add("lit");
+  await waveEntrance(plane, inner, 1000);
+  await wait(1000);
+  const exitPromise=waveExit(plane, inner, 800);
+  await wait(300);
+  plane.classList.remove("lit");
+  await exitPromise;
+  await wait(50);}
+
+async function wave3(entry,rarity){
+  const plane=$("#wPlane3"),inner=$("#wInner3");
+  $("#wText3").textContent=entry.title;
+  adjustTextSize($("#wText3"),100,28,8,40);
+  plane.style.setProperty("--wave-color",rarity.colors[0]);
+  plane.style.setProperty("--wave-glow",rarity.ray);
+  plane.classList.add("lit");
+  await waveEntrance(plane, inner, 1000);
+  await wait(1000);
+  const exitPromise=waveExit(plane, inner, 800);
+  await wait(300);
+  plane.classList.remove("lit");
+  await exitPromise;
+  await wait(50);}
+
+async function wave4(entry,rarity){
+  const plane=$("#wPlane4"),inner=$("#wInner4");
+  const gradeText=$("#wText4");
+  gradeText.innerHTML=`<span class="g-int">1</span><span class="g-dec">,0</span>`;
+  gradeText.style.fontSize="clamp(48px,12vw,120px)";
+  plane.style.setProperty("--wave-color",rarity.colors[0]);
+  plane.style.setProperty("--wave-glow",rarity.ray);
+
+  plane.classList.add("lit");
+  await waveEntrance(plane, inner, 1000);
+
+  const rect=cine3d.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+
+  await wait(500);
+
+  $("#cineVignette").classList.add("intense");
+  await wait(200);
+
+  const gradePromise=countGrade(gradeText,1.0,entry.grade,2500);
+  await gradePromise;
+
+  await wait(150);
+
+  const intensity=rarity.power;
+  CineFX.burstSparks(cx,cy,250+intensity*30,rarity.colors,2+intensity*.15);
+  CineFX.burstConfetti(cx,cy,250+intensity*40,rarity.colors,2+intensity*.15);
+  CineFX.rain(cx,cy,150+intensity*25,rarity.colors);
+
+  cine3d.classList.add("shake");
+  await wait(400);
+  cine3d.classList.remove("shake");
+
+  await wait(80);
+  CineFX.burstSparks(cx,cy,200+intensity*25,rarity.colors,1.8+intensity*.1);
+  CineFX.burstConfetti(cx,cy,200+intensity*35,rarity.colors,1.8+intensity*.1);
+
+  await wait(80);
+  CineFX.burstConfetti(cx,cy,150+intensity*30,rarity.colors,1.6+intensity*.1);
+
+  $("#cineVignette").classList.remove("intense");
+  await wait(200);
+
+  await waveExit(plane, inner, 800);
+  plane.classList.remove("lit");
+  await wait(100);}
+
+async function finalWarpAndCard(entry,rarity,variant,imgUrl){
+  cineCard.innerHTML=cardFrontHTML(entry,rarity.id,variant,imgUrl);
+  cineCardStage.classList.add("is-in");
+  await wait(100);
+  cineCardStage.classList.add("zoom-in");
+  await wait(1200);
+  cine3d.style.opacity="0";
+  const rect=cineCard.getBoundingClientRect();
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height*.5;
+  const power=rarity.power;
+  CineFX.burstSparks(cx,cy,40+power*25,rarity.colors,.9+power*.1);
+  if(power>=3)CineFX.burstConfetti(cx,cy-40,30+power*25,rarity.colors,1);
+  if(power>=6)CineFX.rain(cx,cy,40+power*12,rarity.colors);
+  await wait(400);
+  bindTilt(cineCardStage,cineCardTilt);
+
+  const cardFront=cineCard.querySelector(".card-front");
+  const overlay=$("#cardTextOverlay");
+  overlay.setAttribute("data-rarity",rarity.id);
+  overlay.setAttribute("data-type",entry.type);
+  overlay.style.setProperty("--mat1",rarity.colors[0]);
+  overlay.style.setProperty("--mat2",rarity.colors[1]);
+  overlay.style.setProperty("--mat3",rarity.colors[2]);
+  overlay.style.setProperty("--accent",rarity.accent);
+  overlay.style.setProperty("--accent2",rarity.accent2);
+  overlay.style.setProperty("--line",rarity.line);
+  overlay.style.setProperty("--glow",rarity.ray);
+  overlay.style.setProperty("--txt",rarity.txt);
+
+  setGrade($("#ctoGrade"),entry.grade);
+  $("#ctoSubject").textContent=entry.subject;
+  $("#ctoTest").textContent=entry.title;
+  overlay.classList.add("active");
+  await wait(300);}
+
+/* ======================= HOOFDSEQUENCE ======================= */
+async function beginOpen(){
+  if(state.busy)return;state.busy=true;
+  const entry=drawCard();const rarity=rarityForGrade(entry.grade);
+  const variant=pickVariant(rarity.id);const imgUrl=pickImage(entry.type);
+  state.lastCardKey=keyOf(entry);state.lastVariant[rarity.id]=variant;
+  const pack=PACKS.find(p=>p.id===state.selectedPack)||PACKS[0];
+  enterCinematic(pack);
+  try{
+    await packPhase(pack);
+    await wave1(entry,rarity);
+    await wave2(entry,rarity);
+    await wave3(entry,rarity);
+    await wave4(entry,rarity);
+    await finalWarpAndCard(entry,rarity,variant,imgUrl);
+  }catch(e){console.error(e);}
+  const item={id:state.nextId++,entry,rarityId:rarity.id,variant,img:imgUrl,ts:Date.now()};
+  state.collection.push(item);state.byId.set(item.id,item);state.currentItem=item;
+  state.opened++;renderRecent();renderStats();
+  cineActions.classList.add("active");
+  state.busy=false;}
+
+/* ======================= OVERLAYS ======================= */
+function navActive(v){$$(".nav-btn").forEach(b=>b.classList.toggle("is-active",b.dataset.view===v));}
+function openOverlay(view){
+  if(view==="collectie")overlayPanel.innerHTML=collectionPanelHTML();
+  else if(view==="overzicht")overlayPanel.innerHTML=overviewPanelHTML();
+  overlay.classList.add("is-open");}
+function closeOverlay(){overlay.classList.remove("is-open");navActive("winkel");}
+function collectionPanelHTML(){const items=state.collection.slice().reverse();
+  const body=items.length?'<div class="col-grid">'+items.map(it=>{const r=RARITIES[it.rarityId];return `
+    <button class="col-item" data-rarity="${it.rarityId}" data-action="view-item" data-id="${it.id}">
+      <img class="col-img" src="${it.img}" alt="" loading="lazy" onerror="this.style.display='none'">
+      <span class="ci-top"><span class="ci-rar">${r.label}</span><span class="ci-gr">${fmtGrade(it.entry.grade)}</span></span>
+      <span><span class="ci-sub">${it.entry.subject}</span><span class="ci-title">${it.entry.title}</span></span>
+    </button>`;}).join("")+'</div>'
+    :'<div class="empty-state">JE HEBT NOG GEEN KAARTEN — OPEN EEN PAKKET IN DE WINKEL</div>';
+  return `<div class="panel-head"><div><div class="panel-title">MIJN COLLECTIE</div>
+    <div class="panel-sub">${items.length} KAART${items.length===1?"":"EN"} IN DEZE SESSIE</div></div>
+    <button class="ov-close" data-action="close-overlay" aria-label="Sluiten">✕</button></div>${body}`;}
+function overviewPanelHTML(){const total=state.collection.length;
+  const avg=total?state.collection.reduce((s,i)=>s+i.entry.grade,0)/total:0;
+  const counts={};RARITY_ORDER.forEach(id=>counts[id]=0);
+  state.collection.forEach(i=>counts[i.rarityId]=(counts[i.rarityId]||0)+1);
+  const max=Math.max(1,...Object.values(counts));
+  const bars=RARITY_ORDER.map(id=>{const r=RARITIES[id];const n=counts[id]||0;
+    const pct=Math.round((n/max)*100);return `<div class="bar-row" data-rarity="${id}">
+      <div class="bar-name">${r.label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="bar-count">${n}</div></div>`;}).join("");
+  return `<div class="panel-head"><div><div class="panel-title">OVERZICHT</div>
+    <div class="panel-sub">JOUW SESSIE IN CIJFERS</div></div>
+    <button class="ov-close" data-action="close-overlay" aria-label="Sluiten">✕</button></div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="sc-label">PAKKETTEN GEOPEND</div><div class="sc-value">${state.opened}</div></div>
+      <div class="stat-card"><div class="sc-label">KAARTEN VERZAMELD</div><div class="sc-value">${total}</div></div>
+      <div class="stat-card"><div class="sc-label">GEMIDDELD CIJFER</div><div class="sc-value">${total?fmtGrade(Math.round(avg*10)/10):"—"}</div></div>
+      <div class="stat-card"><div class="sc-label">BESTE KAART</div><div class="sc-value">${total?fmtGrade(Math.max(...state.collection.map(i=>i.entry.grade))):"—"}</div></div>
+    </div><div class="bar-list">${bars}</div>`;}
+function openDetailById(id){const item=state.byId.get(Number(id));if(!item)return;
+  const r=RARITIES[item.rarityId],e=item.entry;
+  detailCard.innerHTML=`<div class="card-tilt">${cardFrontHTML(e,item.rarityId,item.variant,item.img)}</div>`;
+  setGrade(detailCard.querySelector("[data-grade]"),e.grade);
+  detailInfo.innerHTML=`<div class="di-kicker">${r.label}</div><div class="di-title">${e.subject}</div>
+    <div class="di-sub">${e.title}</div><div class="di-rows">
+    <div class="di-row"><span>CIJFER</span><b>${fmtGrade(e.grade)}</b></div>
+    <div class="di-row"><span>WEGING</span><b>${e.weging}×</b></div>
+    <div class="di-row"><span>PERIODE</span><b>${e.periode}</b></div>
+    <div class="di-row"><span>ZELDZAAMHEID</span><b>${r.label}</b></div>
+    <div class="di-row"><span>EDITIE</span><b>${item.variant===1?"I":"II"}</b></div></div>
+    <div class="di-flavor">${r.flavor}</div>
+    <div class="di-actions"><button class="btn-primary" data-action="close-detail">TERUG</button>
+    <button class="btn-ghost" data-action="collection-from-detail">ALLE KAARTEN</button></div>`;
+  detailOverlay.classList.add("is-open");
+  bindTilt(detailCard,detailCard.querySelector(".card-tilt"));}
+
+/* ======================= PAKKET SELECTEREN ======================= */
+function selectPack(id){if(state.busy)return;const p=PACKS.find(x=>x.id===id);if(!p)return;
+  state.selectedPack=id;
+  $("#packWrap").setAttribute("data-theme",p.theme);
+  $("#mainPackImg").innerHTML=`<img src="${PACK_IMG[p.theme]}" alt="" onerror="this.style.display='none'">`;
+  $$(".pack-tile").forEach(t=>{const on=t.dataset.pack===id;
+    t.classList.toggle("is-active",on);t.setAttribute("aria-pressed",on?"true":"false");});
+  setUI("idle");}
+
+/* ======================= ACTIES ======================= */
+document.addEventListener("click",ev=>{
+  const btn=ev.target.closest("[data-action]");if(!btn)return;
+  const action=btn.dataset.action;
+  switch(action){
+    case"open":beginOpen();break;
+    case"cine-reopen":if(!state.busy){exitCinematic(false);setTimeout(()=>beginOpen(),120);}break;
+    case"cine-detail":if(state.currentItem){exitCinematic(false);setTimeout(()=>openDetailById(state.currentItem.id),120);}break;
+    case"cine-collection":exitCinematic(false);navActive("collectie");setTimeout(()=>openOverlay("collectie"),120);break;
+    case"cine-close":exitCinematic(true);break;
+    case"detail":if(state.currentItem)openDetailById(state.currentItem.id);break;
+    case"collection":navActive("collectie");openOverlay("collectie");break;
+    case"collection-from-detail":detailOverlay.classList.remove("is-open");navActive("collectie");openOverlay("collectie");break;
+    case"select-pack":selectPack(btn.dataset.pack);break;
+    case"nav":{const v=btn.dataset.view;navActive(v);detailOverlay.classList.remove("is-open");
+      if(v==="winkel"){closeOverlay();navActive("winkel");}else openOverlay(v);break;}
+    case"close-overlay":closeOverlay();break;
+    case"close-detail":detailOverlay.classList.remove("is-open");break;
+    case"view-item":openDetailById(btn.dataset.id);break;}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){
+  if(detailOverlay.classList.contains("is-open"))detailOverlay.classList.remove("is-open");
+  else if(overlay.classList.contains("is-open"))closeOverlay();
+  else if(cinematic.classList.contains("active")&&!state.busy)exitCinematic(true);}});
+overlay.addEventListener("click",e=>{if(e.target===overlay)closeOverlay();});
+detailOverlay.addEventListener("click",e=>{if(e.target===detailOverlay)detailOverlay.classList.remove("is-open");});
+$("#demoSelect").addEventListener("change",e=>{state.forcedRarity=e.target.value;});
+
+/* ======================= INIT ======================= */
+(function init(){renderPackTiles();renderRecent();renderStats();selectPack("cultuur");setUI("idle");})();
+</script>
+</body>
+</html>
