@@ -372,6 +372,131 @@
       }
 
       /* =========================================================
+         SHOWCASE BUTTON (BIG NEW BUTTON)
+         ========================================================= */
+      .showcase-promo {
+        margin: 2.5rem auto 0;
+        max-width: 1280px;
+        text-align: center;
+      }
+
+      .showcase-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 1.25rem 2.5rem;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 100, 150, 0.5);
+        background: linear-gradient(135deg, rgba(255, 80, 120, 0.25), rgba(200, 50, 100, 0.35));
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        box-shadow:
+          0 0 40px rgba(255, 80, 120, 0.4),
+          0 0 80px rgba(255, 80, 120, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          0 8px 32px rgba(0, 0, 0, 0.3);
+        color: #fff;
+        font-family: 'DM Serif Display', serif;
+        font-size: 1.4rem;
+        font-weight: normal;
+        letter-spacing: 0.05em;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        animation: showcase-pulse 2s ease-in-out infinite;
+      }
+
+      .showcase-button::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(255, 100, 150, 0.6), rgba(255, 80, 120, 0.4), rgba(200, 50, 100, 0.6));
+        z-index: -1;
+        filter: blur(12px);
+        opacity: 0.5;
+        transition: opacity 0.4s ease;
+      }
+
+      .showcase-button:hover {
+        transform: translateY(-4px) scale(1.05);
+        border-color: rgba(255, 120, 160, 0.7);
+        background: linear-gradient(135deg, rgba(255, 100, 140, 0.35), rgba(220, 60, 110, 0.45));
+        box-shadow:
+          0 0 60px rgba(255, 100, 150, 0.6),
+          0 0 100px rgba(255, 80, 120, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .showcase-button:hover::before {
+        opacity: 0.8;
+      }
+
+      .showcase-button:active {
+        transform: translateY(-2px) scale(1.02);
+      }
+
+      .showcase-button:focus-visible {
+        outline: 3px solid rgba(255, 150, 180, 0.8);
+        outline-offset: 4px;
+      }
+
+      .showcase-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #ff4080, #ff2060);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        box-shadow: 0 0 20px rgba(255, 64, 128, 0.6);
+        animation: badge-glow 1.5s ease-in-out infinite alternate;
+      }
+
+      @keyframes showcase-pulse {
+        0%, 100% {
+          box-shadow:
+            0 0 40px rgba(255, 80, 120, 0.4),
+            0 0 80px rgba(255, 80, 120, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15),
+            0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        50% {
+          box-shadow:
+            0 0 50px rgba(255, 100, 150, 0.5),
+            0 0 90px rgba(255, 80, 120, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      @keyframes badge-glow {
+        0% {
+          box-shadow: 0 0 15px rgba(255, 64, 128, 0.5);
+        }
+        100% {
+          box-shadow: 0 0 25px rgba(255, 64, 128, 0.8);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .showcase-button {
+          padding: 1rem 2rem;
+          font-size: 1.15rem;
+        }
+        .showcase-badge {
+          padding: 0.3rem 0.7rem;
+          font-size: 0.7rem;
+        }
+      }
+
+      /* =========================================================
          GRID + CARDS
          ========================================================= */
       .nav-grid {
@@ -714,6 +839,7 @@
         <div class="topbar-links">
           <a class="topbar-link" href="#games"  data-nav="games">Games</a>
           <a class="topbar-link" href="#tools"  data-nav="tools">Tools</a>
+          <a class="topbar-link" href="/learn/" data-nav="learn">Learn</a>
           <a class="topbar-link" href="#gallery" data-nav="gallery">Galerij</a>
         </div>
         <button class="layout-btn" id="layoutBtn" title="Layout: Pill" aria-label="Layout wisselen">
@@ -982,9 +1108,16 @@
         { title: 'Baseball', desc: 'Sla de bal en scoor punten.', href: '/baseball', cat: 'games', icon: 'game', external: false },
         { title: 'Liquid Soccer', desc: 'Vloeibare voetbal — dynamisch en verslavend.', href: '/liquid-soccer', cat: 'games', icon: 'game', badge: 'Nieuw', external: false },
 
+        { title: 'Learn Platform', desc: 'Interactieve leersessies en theorie viewer.', href: '/learn', cat: 'tools', icon: 'book', badge: 'Nieuw', external: false },
+
+        { title: 'Begrippen Leren', desc: 'Oefen met termen en definities voor alle vakken.', href: '/term-learner', cat: 'tools', icon: 'book', badge: 'Nieuw', external: false },
+
         { title: 'Numworks Scripts Manager', desc: 'Beheer en voeg scripts toe aan Numworks.', href: '/numworks', cat: 'tools', icon: 'code', badge: 'Nieuw', external: false },
 
         { title: 'Cijferkaart', desc: 'Ultimate Team Pack Simulator — open pakketten en verzamel kaarten.', href: '/cijferkaart', cat: 'tools', icon: 'cards', badge: 'Nieuw', external: false },
+
+        /* ---------------- SHOWCASE ---------------- */
+        { title: 'Showcase', desc: 'Demonstratie van tekst- en display-types.', href: '/showcase', cat: 'tools', icon: 'star', badge: 'NEW', external: false },
 
         /* ---------------- GALLERY ---------------- */
         { title: 'Galerij & Herinneringen', desc: 'Funny moments, video\'s en foto\'s.', href: '/gallery', cat: 'gallery', icon: 'gallery', badge: 'Nieuw', external: false }

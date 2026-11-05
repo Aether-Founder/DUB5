@@ -1,0 +1,129 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Space-themed design system with glassmorphism */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap');
+
+@layer base {
+  :root {
+    --background: 222 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 240 10% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 240 10% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 100% 85%;
+    --primary-foreground: 222 84% 4.9%;
+
+    --secondary: 240 5% 20%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 240 5% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 240 10% 18%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 5% 25%;
+    --input: 240 5% 18%;
+    --ring: 210 100% 85%;
+
+    --radius: 0.5rem;
+
+    /* Space gradient variables */
+    --space-gradient: linear-gradient(135deg, #000044 0%, #000033 50%, #000066 100%);
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --star-glow: #fffbe8;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    background: var(--space-gradient);
+    min-height: 100vh;
+    color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow-x: hidden;
+  }
+
+  .font-serif {
+    font-family: 'DM Serif Display', serif;
+  }
+}
+
+@layer components {
+  .glass-container {
+    @apply bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] shadow-2xl;
+  }
+  
+  .glass-input {
+    @apply bg-[var(--glass-bg)] backdrop-blur-sm border border-[var(--glass-border)] 
+           focus:border-primary focus:bg-opacity-20 transition-all duration-200;
+  }
+  
+  .glass-button {
+    @apply bg-[var(--glass-bg)] backdrop-blur-sm border border-[var(--glass-border)]
+           transition-all duration-300 ease-out
+           hover:bg-opacity-40 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/20
+           active:translate-y-0 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent;
+  }
+
+  /* Enhanced button hover effects for all buttons */
+  button:not(.glass-button) {
+    @apply transition-all duration-300 ease-out
+           hover:shadow-lg
+           active:translate-y-0 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-transparent;
+  }
+
+  /* Special hover effects for primary buttons */
+  button[type="submit"], 
+  .bg-primary {
+    @apply hover:shadow-primary/30;
+  }
+
+  /* Special hover effects for destructive buttons */
+  .bg-destructive, 
+  .text-destructive {
+    @apply hover:shadow-red-500/30;
+  }
+
+  .star-glow {
+    text-shadow: 0 0 8px var(--star-glow), 0 0 2px #fff;
+    color: var(--star-glow);
+  }
+}
+
+@layer utilities {
+  .animate-twinkle {
+    animation: twinkle 2s infinite alternate;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}

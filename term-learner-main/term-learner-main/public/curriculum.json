@@ -1,0 +1,114 @@
+{
+  "subjects": [
+    {
+      "id": "nederlands",
+      "name": "Nederlands",
+      "chapters": []
+    },
+    {
+      "id": "engels",
+      "name": "Engels",
+      "chapters": []
+    },
+    {
+      "id": "frans",
+      "name": "Frans",
+      "chapters": []
+    },
+    {
+      "id": "economie",
+      "name": "Economie",
+      "chapters": []
+    },
+    {
+      "id": "geschiedenis",
+      "name": "Geschiedenis",
+      "chapters": []
+    },
+    {
+      "id": "biologie",
+      "name": "Biologie",
+      "chapters": [
+        {
+          "id": "celbiologie",
+          "name": "Hoofdstuk 1: Celbiologie",
+          "learningSets": [
+            {
+              "id": "biologie-cel",
+              "name": "Celbiologie - Termen",
+              "pairs": [
+                {
+                  "term": "Cel",
+                  "definition": "De kleinste levensfunctie-eenheid van alle organismen"
+                },
+                {
+                  "term": "Celkern",
+                  "definition": "Het centrale deel van een eukaryotische cel dat het DNA bevat"
+                },
+                {
+                  "term": "Mitochondrion",
+                  "definition": "Het energieproducerende organel van de cel (krachtcentrale)"
+                },
+                {
+                  "term": "Ribosoom",
+                  "definition": "Een celstructuur waar eiwitten worden gemaakt"
+                },
+                {
+                  "term": "Celmembraan",
+                  "definition": "De buitenste laag van een cel die stoffen reguleert"
+                },
+                {
+                  "term": "Lysosoom",
+                  "definition": "Een organel met enzymen dat afvalstoffen afbreekt"
+                },
+                {
+                  "term": "Golgi-apparaat",
+                  "definition": "Verpakt en sorteert eiwitten voor transport"
+                },
+                {
+                  "term": "Endoplasmatisch reticulum",
+                  "definition": "Een netwerk van membranen betrokken bij eiwitsynthese"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "natuurkunde",
+      "name": "Natuurkunde",
+      "chapters": []
+    },
+    {
+      "id": "wiskunde-a",
+      "name": "Wiskunde A",
+      "chapters": []
+    },
+    {
+      "id": "wiskunde-b",
+      "name": "Wiskunde B",
+      "chapters": []
+    },
+    {
+      "id": "wiskunde-d",
+      "name": "Wiskunde D",
+      "chapters": []
+    },
+    {
+      "id": "scheikunde",
+      "name": "Scheikunde",
+      "chapters": []
+    },
+    {
+      "id": "levensbeschouwing",
+      "name": "Levensbeschouwing",
+      "chapters": []
+    },
+    {
+      "id": "ckv",
+      "name": "Culturele en kunstzinnige vorming",
+      "chapters": []
+    }
+  ]
+}

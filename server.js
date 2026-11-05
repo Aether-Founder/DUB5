@@ -87,9 +87,6 @@ app.get('/sudoku', (req, res) => {
 // Serve static assets for liquid-soccer (must be before the route)
 app.use('/liquid-soccer', express.static(path.join(__dirname, 'games', 'liquid-soccer')));
 
-// Serve static assets for liquid-soccer (must be before the route)
-app.use('/liquid-soccer', express.static(path.join(__dirname, 'games', 'liquid-soccer')));
-
 app.get('/gnomelauncher', (req, res) => {
   res.sendFile(path.join(__dirname, 'games', 'gnomelauncher', 'index.html'));
 });
@@ -241,6 +238,13 @@ app.get('/blogs/content-format', (req, res) => {
   res.download(path.join(__dirname, 'content', 'research', 'CONTENT-FORMAT.md'));
 });
 
+// Serve static assets for showcase (must be before the route)
+app.use('/showcase', express.static(path.join(__dirname, 'showcase')));
+
+app.get('/showcase', (req, res) => {
+  res.sendFile(path.join(__dirname, 'showcase', 'index.html'));
+});
+
 // SPA fallback - serve index.html for any other route
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
@@ -255,4 +259,5 @@ app.listen(PORT, () => {
   console.log(`Guides: /blogs, /handleidingen, /how-to, /installatie, /tips, /faq, /problemen`);
   console.log(`Gallery: /gallery`);
   console.log(`Blogs: /blogs, /blogs/content-format`);
+  console.log(`Showcase: /showcase`);
 });
